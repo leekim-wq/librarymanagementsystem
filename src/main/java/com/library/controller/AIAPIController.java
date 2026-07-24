@@ -24,13 +24,34 @@ public class AIAPIController {
     @PostMapping("/recommend")
     public ResponseEntity<Map<String, Object>> getRecommendations(@RequestBody Map<String, Object> request) {
         String query = (String) request.get("query");
-        List<Book> availableBooks = bookService.getAvailableBooks();
 
-        List<Book> recommendations = aiService.getAIRecommendations(query, availableBooks);
+        // Get all books for recommendations
+        List<Book> allBooks = bookService.getAllBooks();
+        List<Book> recommendations;
+
+        if (query == null || query.trim().isEmpty()) {
+            // Return random books if no query
+            recommendations = allBooks.stream()
+                    .limit(5)
+                    .collect(java.util.stream.Collectors.toList());
+        } else {
+            // Search for books matching the query
+            recommendations = bookService.searchBooks(query);
+
+            // If no matches, return some random books
+            if (recommendations.isEmpty()) {
+                recommendations = allBooks.stream()
+                        .limit(5)
+                        .collect(java.util.stream.Collectors.toList());
+            } else if (recommendations.size() > 5) {
+                recommendations = recommendations.subList(0, 5);
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("recommendations", recommendations);
         response.put("count", recommendations.size());
+        response.put("query", query);
 
         return ResponseEntity.ok(response);
     }

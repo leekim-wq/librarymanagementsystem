@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "books")
@@ -12,6 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,26 +22,23 @@ public class Book {
     @Column(nullable = false)
     private String author;
 
-    private String isbn;
     private String category;
     private String description;
-    private String coverImage;
-
-    @Column(nullable = false)
     private Integer quantity = 1;
 
-    @Column(nullable = false)
+    @Column(name = "available_quantity")
     private Integer availableQuantity = 1;
 
-    private LocalDate publishedDate;
-    private String publisher;
+    private Double rating = 0.0;
 
     @Column(name = "total_borrows")
     private Integer totalBorrows = 0;
 
-    private Double rating = 0.0;
-
+    /**
+     * Check if book is available for borrowing
+     * FIXES: isAvailable() method reference error
+     */
     public boolean isAvailable() {
-        return availableQuantity > 0;
+        return availableQuantity != null && availableQuantity > 0;
     }
 }

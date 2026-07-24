@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${book.title} + ' - Smart Library'">Book Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        .book-detail-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        .book-cover {
+            width: 100%;
+            max-width: 300px;
+            height: 400px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 5rem;
+            margin: 0 auto;
+        }
+        .badge-available {
+            background: #27ae60;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+        }
+        .badge-borrowed {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+        }
+        .btn-borrow {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            border: none;
+            color: white;
+            padding: 12px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        .btn-borrow:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+        }
+        .btn-borrow:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-return {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            border: none;
+            color: white;
+            padding: 12px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        .btn-return:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(243, 156, 18, 0.4);
+        }
+        .info-label {
+            font-weight: 600;
+            color: #2d3748;
+            min-width: 120px;
+            display: inline-block;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .alert {
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-book-open"></i> Smart Library
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/books"><i class="fas fa-book"></i> Books</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Content -->
+<div class="container">
+    <div class="book-detail-card">
+        <!-- Alerts -->
+        <div id="alertContainer">
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> <span th:text="${success}">Success</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Error</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <a href="/books" class="btn btn-outline-secondary mb-4">
+            <i class="fas fa-arrow-left"></i> Back to Books
+        </a>
+
+        <div class="row">
+            <!-- Book Cover -->
+            <div class="col-md-4 text-center">
+                <div class="book-cover">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="mt-3">
+                        <span class="badge" th:classappend="${book.availableQuantity > 0 ? 'badge-available' : 'badge-borrowed'}">
+                            <i th:if="${book.availableQuantity > 0}" class="fas fa-check-circle"></i>
+                            <i th:unless="${book.availableQuantity > 0}" class="fas fa-times-circle"></i>
+                            <span th:if="${book.availableQuantity > 0}">Available</span>
+                            <span th:unless="${book.availableQuantity > 0}">Borrowed</span>
+                        </span>
+                </div>
+            </div>
+
+            <!-- Book Info -->
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold" th:text="${book.title}">Book Title</h1>
+                <h4 class="text-muted">
+                    <i class="fas fa-user"></i> by <span th:text="${book.author}">Author</span>
+                </h4>
+
+                <div class="mt-4">
+                    <div class="mb-2">
+                        <span class="info-label"><i class="fas fa-tag"></i> Category:</span>
+                        <span class="badge bg-info" th:text="${book.category}">Category</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="info-label"><i class="fas fa-copy"></i> Quantity:</span>
+                        <span th:text="${book.quantity}">0</span> total,
+                        <span th:text="${book.availableQuantity}">0</span> available
+                    </div>
+                    <div class="mb-2">
+                        <span class="info-label"><i class="fas fa-star"></i> Rating:</span>
+                        <span class="text-warning">
+                                <i class="fas fa-star"></i> <span th:text="${book.rating}">0.0</span>
+                            </span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="info-label"><i class="fas fa-book-open"></i> Total Borrows:</span>
+                        <span th:text="${book.totalBorrows}">0</span> times
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <p class="text-muted" th:text="${book.description}">Book description goes here.</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-4">
+                    <!-- Borrow Form -->
+                    <form th:action="'/books/borrow/' + ${book.id}" method="post"
+                          class="d-inline">
+                        <button type="submit" class="btn btn-borrow"
+                                th:disabled="${book.availableQuantity <= 0}">
+                            <i class="fas fa-hand-holding-heart"></i>
+                            <span th:if="${book.availableQuantity > 0}">Borrow This Book</span>
+                            <span th:unless="${book.availableQuantity > 0}">Currently Unavailable</span>
+                        </button>
+                    </form>
+
+                    <a href="/books" class="btn btn-outline-secondary ms-2">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+
+                <!-- Stats -->
+                <div class="row mt-4">
+                    <div class="col-4">
+                        <div class="stat-box">
+                            <div class="stat-number" th:text="${book.totalBorrows}">0</div>
+                            <small class="text-muted">Total Borrows</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-box">
+                            <div class="stat-number" th:text="${book.availableQuantity}">0</div>
+                            <small class="text-muted">Available Copies</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-box">
+                            <div class="stat-number" th:text="${book.rating}">0.0</div>
+                            <small class="text-muted">Rating</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

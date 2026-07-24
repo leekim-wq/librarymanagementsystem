@@ -5,6 +5,7 @@ import com.library.model.Loan;
 import com.library.model.Member;
 import com.library.repository.BookRepository;
 import com.library.repository.LoanRepository;
+import com.library.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class BookService {
@@ -23,7 +25,12 @@ public class BookService {
     private LoanRepository loanRepository;
 
     @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
     private AIService aiService;
+
+    // ========== BASIC CRUD ==========
 
     public List<Book> getAllBooks() {
         return bookRepository.findAll();
@@ -40,9 +47,15 @@ public class BookService {
         return bookRepository.save(book);
     }
 
+    public void saveAll(List<Book> books) {
+        bookRepository.saveAll(books);
+    }
+
     public void deleteBook(Long id) {
         bookRepository.deleteById(id);
     }
+
+    // ========== SEARCH ==========
 
     public List<Book> searchBooks(String query) {
         if (query == null || query.trim().isEmpty()) {
@@ -56,36 +69,84 @@ public class BookService {
         return bookRepository.findAvailableBooks();
     }
 
-    public List<Book> getAIRecommendations(String query) {
-        List<Book> availableBooks = getAvailableBooks();
-        return aiService.getAIRecommendations(query, availableBooks);
+    public List<Book> getBooksByCategory(String category) {
+        if (category == null || category.trim().isEmpty()) {
+            return bookRepository.findAll();
+        }
+        return bookRepository.findByCategory(category.trim());
+    }
+
+    public List<String> getAllCategories() {
+        return bookRepository.findAll().stream()
+                .map(Book::getCategory)
+                .filter(category -> category != null && !category.isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     public List<Book> getMostBorrowedBooks() {
         return bookRepository.findMostBorrowedBooks();
     }
 
+    // ========== AI RECOMMENDATIONS ==========
+
+    public List<Book> getAIRecommendations(String query) {
+        List<Book> availableBooks = getAvailableBooks();
+        if (availableBooks.isEmpty()) {
+            return List.of();
+        }
+        try {
+            return aiService.getAIRecommendations(query, availableBooks);
+        } catch (Exception e) {
+            return availableBooks.stream().limit(5).collect(Collectors.toList());
+        }
+    }
+
+    // ========== BORROWING & RETURN - FIXED ==========
+
     @Transactional
     public boolean borrowBook(Long bookId, Member member) {
-        Optional<Book> bookOpt = bookRepository.findById(bookId);
-        if (bookOpt.isEmpty()) return false;
+        // Fetch fresh member from database with proper transaction
+        Member freshMember = memberRepository.findById(member.getId())
+                .orElseThrow(() -> new RuntimeException("Member not found"));
 
-        Book book = bookOpt.get();
-        if (book.getAvailableQuantity() <= 0) return false;
+        // Check if book exists
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        // Check if member can borrow
-        if (!member.canBorrow()) return false;
+        // Check if book is available
+        if (book.getAvailableQuantity() <= 0) {
+            return false;
+        }
+
+        // Check borrowing limit using repository query instead of lazy loading
+        long activeLoans = loanRepository.countByMemberAndReturnedFalse(freshMember);
+
+        // Check if member can borrow (not exceeding limit and fines < 100)
+        if (activeLoans >= freshMember.getBorrowingLimit()) {
+            return false;
+        }
+
+        if (freshMember.getTotalFines() >= 100.0) {
+            return false;
+        }
 
         // Check if member already borrowed this book
-        Optional<Loan> existingLoan = loanRepository.findByBookIdAndMemberIdAndReturnedFalse(bookId, member.getId());
-        if (existingLoan.isPresent()) return false;
+        Optional<Loan> existingLoan = loanRepository.findByBookIdAndMemberIdAndReturnedFalse(
+                bookId, freshMember.getId());
+        if (existingLoan.isPresent()) {
+            return false;
+        }
 
-        // Create loan
+        // Create new loan
         Loan loan = new Loan();
         loan.setBook(book);
-        loan.setMember(member);
+        loan.setMember(freshMember);
         loan.setBorrowDate(LocalDate.now());
-        loan.setDueDate(LocalDate.now().plusDays(14));
+        loan.setDueDate(LocalDate.now().plusDays(14)); // 2 weeks
+
+        // Save loan
         loanRepository.save(loan);
 
         // Update book quantity
@@ -99,11 +160,17 @@ public class BookService {
     @Transactional
     public boolean returnBook(Long loanId) {
         Optional<Loan> loanOpt = loanRepository.findById(loanId);
-        if (loanOpt.isEmpty()) return false;
+        if (loanOpt.isEmpty()) {
+            return false;
+        }
 
         Loan loan = loanOpt.get();
-        if (loan.isReturned()) return false;
 
+        if (loan.isReturned()) {
+            return false;
+        }
+
+        // Mark as returned
         loan.setReturned(true);
         loan.setReturnDate(LocalDate.now());
 
@@ -120,7 +187,17 @@ public class BookService {
         // Update member fines
         Member member = loan.getMember();
         member.setTotalFines(member.getTotalFines() + fine);
+        memberRepository.save(member);
 
         return true;
+    }
+
+    public boolean isBookAvailable(Long bookId) {
+        Optional<Book> bookOpt = bookRepository.findById(bookId);
+        if (bookOpt.isPresent()) {
+            Book book = bookOpt.get();
+            return book.isAvailable();
+        }
+        return false;
     }
 }

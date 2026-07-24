@@ -1,69 +1,224 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
-    <title>Browse Books</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books - Smart Library</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        .book-card {
+            border: none;
+            border-radius: 15px;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .search-box {
+            border-radius: 50px;
+            padding: 15px 25px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        .search-box:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .badge-available { background: #27ae60; color: white; padding: 5px 12px; border-radius: 20px; }
+        .badge-borrowed { background: #e74c3c; color: white; padding: 5px 12px; border-radius: 20px; }
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            padding: 10px 25px;
+            transition: all 0.3s;
+        }
+        .btn-gradient:hover { color: white; transform: scale(1.02); }
+        .btn-borrow {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+        .btn-borrow:hover { color: white; transform: scale(1.05); }
+        .btn-borrow:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .category-pill {
+            padding: 8px 20px;
+            border-radius: 25px;
+            background: #e9ecef;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-block;
+            margin: 3px;
+        }
+        .category-pill:hover {
+            background: #667eea;
+            color: white;
+        }
+        .category-pill.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-<th:block th:fragment="content">
-    <div class="container mt-4">
-        <h2><i class="fas fa-book"></i> Our Collection</h2>
-
-        <!-- Search Bar -->
-        <div class="search-bar mb-4">
-            <div class="input-group">
-                <input type="text" id="searchInput" class="form-control"
-                       placeholder="Search by title, author, or keyword...">
-                <button class="btn btn-primary" onclick="performSearch()">
-                    <i class="fas fa-search"></i> Search
-                </button>
-            </div>
-        </div>
-
-        <!-- Category Filters -->
-        <div class="mb-4">
-            <a href="/books" class="btn btn-outline-primary me-2">All</a>
-            <a th:each="category : ${categories}"
-               th:href="'/books?category=' + ${category}"
-               class="btn btn-outline-secondary me-2"
-               th:text="${category}">Category</a>
-        </div>
-
-        <!-- Books Grid -->
-        <div class="row">
-            <th:block th:each="book : ${books}">
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card h-100 hover-card">
-                        <div class="card-body">
-                            <h5 class="card-title" th:text="${book.title}">Title</h5>
-                            <p class="card-text text-muted">
-                                <i class="fas fa-user"></i> <span th:text="${book.author}">Author</span>
-                            </p>
-                            <p class="card-text">
-                                <span class="badge bg-info" th:text="${book.category}">Category</span>
-                                <span class="badge" th:classappend="${book.availableQuantity > 0 ? 'bg-success' : 'bg-danger'}">
-                                        <span th:if="${book.availableQuantity > 0}">Available</span>
-                                        <span th:unless="${book.availableQuantity > 0}">Borrowed</span>
-                                    </span>
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-warning">
-                                        <i class="fas fa-star"></i> <span th:text="${book.rating}">0.0</span>
-                                    </span>
-                                <small class="text-muted">
-                                    <i class="fas fa-book"></i> <span th:text="${book.totalBorrows}">0</span>
-                                </small>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <a th:href="'/books/' + ${book.id}" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-eye"></i> View Details
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </th:block>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-book-open"></i> Smart Library
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/books"><i class="fas fa-book"></i> Books</a></li>
+            </ul>
         </div>
     </div>
-</th:block>
+</nav>
+
+<!-- Content -->
+<div class="container mt-4">
+    <!-- Alerts -->
+    <div id="alertContainer"></div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2><i class="fas fa-book text-primary"></i> Book Collection</h2>
+            <p class="text-muted">Browse our collection of <strong th:text="${books.size()}">0</strong> books</p>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <form action="/books" method="get" class="d-flex">
+                <input type="text" name="search" class="form-control search-box"
+                       placeholder="Search by title, author, or category..."
+                       th:value="${searchQuery}">
+                <button type="submit" class="btn btn-gradient ms-2">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <a href="/books" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="mb-4">
+        <a href="/books" class="category-pill" th:classappend="${selectedCategory == null ? 'active' : ''}">All</a>
+        <a th:each="cat : ${categories}"
+           th:href="'/books?category=' + ${cat}"
+           class="category-pill"
+           th:classappend="${selectedCategory == cat ? 'active' : ''}"
+           th:text="${cat}">Category</a>
+    </div>
+
+    <!-- Books Grid -->
+    <div class="row">
+        <div th:if="${books.empty}" class="col-12 text-center py-5">
+            <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+            <h4>No books found</h4>
+            <p class="text-muted">Try adjusting your search or browse all books.</p>
+            <a href="/books" class="btn btn-gradient">Browse All Books</a>
+        </div>
+
+        <div th:each="book : ${books}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card book-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${book.title}">Title</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-user"></i> <span th:text="${book.author}">Author</span>
+                    </p>
+                    <p>
+                        <span class="badge bg-info" th:text="${book.category}">Category</span>
+                        <span class="badge" th:classappend="${book.availableQuantity > 0 ? 'badge-available' : 'badge-borrowed'}">
+                                <span th:if="${book.availableQuantity > 0}">
+                                    <i class="fas fa-check-circle"></i> Available
+                                </span>
+                                <span th:unless="${book.availableQuantity > 0}">
+                                    <i class="fas fa-times-circle"></i> Borrowed
+                                </span>
+                            </span>
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-copy"></i> <span th:text="${book.availableQuantity}">0</span> copies
+                        </small>
+                        <span class="text-warning">
+                                <i class="fas fa-star"></i> <span th:text="${book.rating}">0.0</span>
+                            </span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-grid gap-2">
+                        <!-- View Details Button -->
+                        <a th:href="'/books/' + ${book.id}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye"></i> Details
+                        </a>
+                        <!-- Borrow Button - WORKING -->
+                        <form th:action="'/books/borrow/' + ${book.id}" method="post"
+                              onsubmit="return confirm('Are you sure you want to borrow this book?')">
+                            <button type="submit" class="btn btn-borrow w-100"
+                                    th:disabled="${book.availableQuantity <= 0}">
+                                <i class="fas fa-hand-holding-heart"></i>
+                                <span th:if="${book.availableQuantity > 0}">Borrow Now</span>
+                                <span th:unless="${book.availableQuantity > 0}">Not Available</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show alert function
+    function showAlert(message, type) {
+        const container = document.getElementById('alertContainer');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        container.appendChild(alertDiv);
+        setTimeout(() => alertDiv.remove(), 5000);
+    }
+
+    // Check for flash messages
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const error = urlParams.get('error');
+        if (success) showAlert(success, 'success');
+        if (error) showAlert(error, 'danger');
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

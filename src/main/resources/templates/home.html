@@ -1,113 +1,674 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Library Management System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Library System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: rgba(255,255,255,0.1) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        .main-card {
+            max-width: 1100px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .logo-icon {
+            font-size: 4rem;
+            color: #667eea;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .btn-gradient:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        .btn-outline-gradient {
+            border: 2px solid #667eea;
+            color: #667eea;
+            background: transparent;
+            padding: 12px 30px;
+            border-radius: 50px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .btn-outline-gradient:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            transform: scale(1.05);
+        }
+        .feature-card {
+            padding: 25px;
+            border-radius: 15px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+            height: 100%;
+            cursor: pointer;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: white;
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .search-container {
+            background: white;
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .search-container input {
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px 0 0 50px;
+            background: transparent;
+        }
+        .search-container input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        .search-container button {
+            border-radius: 50px;
+            padding: 15px 30px;
+        }
+        .book-card {
+            border: none;
+            border-radius: 15px;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .badge-available {
+            background: #27ae60;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        .badge-borrowed {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        .alert {
+            border-radius: 15px;
+            border: none;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* AI Chat Styles */
+        #chatContainer {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        #chatMessages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+        .ai-message {
+            display: flex;
+            margin-bottom: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        .user-message {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        .ai-message .message-content {
+            background: #e3f2fd;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            max-width: 85%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .user-message .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-right-radius: 5px;
+            max-width: 85%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input-container input {
+            flex: 1;
+            border-radius: 25px;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        .chat-input-container input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .chat-input-container button {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .recommendation-item {
+            padding: 10px 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        .recommendation-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .typing-indicator {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #e3f2fd;
+            border-radius: 18px;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            margin: 0 3px;
+            animation: typing 1.4s infinite both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-footer {
+            border-top: none;
+        }
+        .btn-close-white {
+            filter: brightness(0) invert(1);
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <!-- Hero Section -->
-    <div class="row mt-5">
-        <div class="col-md-6">
-            <h1 class="display-4 fw-bold text-primary">Welcome to Smart Library</h1>
-            <p class="lead mt-3">Your AI-Powered Library Management System</p>
-            <p>Discover, borrow, and manage books with intelligent recommendations.</p>
-            <div class="mt-4">
-                <a href="/books" class="btn btn-primary btn-lg">
-                    <i class="fas fa-search"></i> Browse Books
-                </a>
-                <button class="btn btn-success btn-lg ms-2" onclick="showAIAssistant()">
-                    <i class="fas fa-robot"></i> Ask AI
-                </button>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card shadow-lg">
-                <div class="card-body text-center">
-                    <i class="fas fa-book-open fa-5x text-primary mb-3"></i>
-                    <h3>Quick Stats</h3>
-                    <div class="row mt-3">
-                        <div class="col-4">
-                            <h5 class="text-primary" th:text="${totalBooks}">0</h5>
-                            <small>Total Books</small>
-                        </div>
-                        <div class="col-4">
-                            <h5 class="text-success" th:text="${availableBooks}">0</h5>
-                            <small>Available</small>
-                        </div>
-                        <div class="col-4">
-                            <h5 class="text-warning" th:text="${totalMembers}">0</h5>
-                            <small>Members</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-book-open"></i> Smart Library
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link active" href="/"><i class="fas fa-home"></i> Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/books"><i class="fas fa-book"></i> Books</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" onclick="showAIAssistant()"><i class="fas fa-robot"></i> AI Assistant</a></li>
+            </ul>
         </div>
     </div>
+</nav>
 
-    <!-- Featured Books Section -->
-    <h2 class="mt-5 mb-4"><i class="fas fa-fire text-warning"></i> AI Recommended Books</h2>
-    <div class="row">
-        <div th:each="book : ${recommendedBooks}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <div class="card h-100 shadow-sm hover-card">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${book.title}">Book Title</h5>
-                    <p class="card-text text-muted">
-                        <i class="fas fa-user"></i> <span th:text="${book.author}">Author</span>
-                    </p>
-                    <p class="card-text">
-                        <span class="badge bg-info" th:text="${book.category}">Category</span>
-                        <span class="badge bg-success" th:if="${book.availableQuantity > 0}">Available</span>
-                        <span class="badge bg-danger" th:unless="${book.availableQuantity > 0}">Borrowed</span>
-                    </p>
-                    <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-warning">
-                                <i class="fas fa-star"></i> <span th:text="${book.rating}">0.0</span>
-                            </span>
-                        <small class="text-muted">
-                            <i class="fas fa-book"></i> <span th:text="${book.totalBorrows}">0</span> borrows
-                        </small>
-                    </div>
-                </div>
-                <div class="card-footer bg-transparent">
-                    <a th:href="'/books/' + ${book.id}" class="btn btn-outline-primary w-100">
-                        <i class="fas fa-eye"></i> View Details
-                    </a>
+<!-- Main Content -->
+<div class="container">
+    <div class="main-card">
+        <!-- Alerts Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="logo-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <h1 class="display-4 fw-bold gradient-text">
+                Smart Library System
+            </h1>
+            <p class="lead text-muted">
+                <i class="fas fa-robot text-primary"></i>
+                AI-Powered Library Management
+            </p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="row mb-4">
+            <div class="col-md-8 mx-auto">
+                <form action="/books" method="get" class="search-container d-flex">
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Search for books by title, author, or category...">
+                    <button type="submit" class="btn btn-gradient">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${totalBooks}">0</div>
+                    <div class="text-muted"><i class="fas fa-book"></i> Total Books</div>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${availableBooks}">0</div>
+                    <div class="text-muted"><i class="fas fa-check-circle text-success"></i> Available</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${totalMembers}">0</div>
+                    <div class="text-muted"><i class="fas fa-users"></i> Members</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="feature-card text-center" onclick="window.location.href='/books'">
+                    <div class="feature-icon"><i class="fas fa-search"></i></div>
+                    <h5>Browse Books</h5>
+                    <p class="text-muted small">Search and discover new books</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center" onclick="showAIAssistant()">
+                    <div class="feature-icon"><i class="fas fa-robot"></i></div>
+                    <h5>AI Assistant</h5>
+                    <p class="text-muted small">Get intelligent book recommendations</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center" onclick="window.location.href='/books'">
+                    <div class="feature-icon"><i class="fas fa-hand-holding-heart"></i></div>
+                    <h5>Easy Borrowing</h5>
+                    <p class="text-muted small">Borrow books with one click</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Recommended Books -->
+        <h4 class="mb-3"><i class="fas fa-robot text-primary"></i> AI Recommended for You</h4>
+        <div class="row">
+            <div th:each="book : ${recommendedBooks}" class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                <div class="card book-card h-100">
+                    <div class="card-body">
+                        <h6 class="card-title" th:text="${book.title}">Title</h6>
+                        <p class="card-text text-muted small">
+                            <i class="fas fa-user"></i> <span th:text="${book.author}">Author</span>
+                        </p>
+                        <span class="badge bg-info" th:text="${book.category}">Category</span>
+                        <span class="badge" th:classappend="${book.availableQuantity > 0 ? 'badge-available' : 'badge-borrowed'}">
+                                <span th:if="${book.availableQuantity > 0}"><i class="fas fa-check-circle"></i> Available</span>
+                                <span th:unless="${book.availableQuantity > 0}"><i class="fas fa-times-circle"></i> Borrowed</span>
+                            </span>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a th:href="'/books/' + ${book.id}" class="btn btn-outline-primary w-100 btn-sm">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="text-center mt-4">
+            <a href="/books" class="btn btn-gradient me-3">
+                <i class="fas fa-book"></i> Browse All Books
+            </a>
+            <button onclick="showAIAssistant()" class="btn btn-outline-gradient">
+                <i class="fas fa-robot"></i> AI Assistant
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-4 pt-3 border-top">
+            <small class="text-muted">
+                <i class="fas fa-code"></i> Spring Boot &nbsp;|&nbsp;
+                <i class="fas fa-database"></i> MySQL &nbsp;|&nbsp;
+                <i class="fas fa-brain"></i> AI Powered
+            </small>
         </div>
     </div>
 </div>
 
 <!-- AI Assistant Modal -->
-<div class="modal fade" id="aiModal" tabindex="-1">
+<div class="modal fade" id="aiModal" tabindex="-1" aria-labelledby="aiModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aiModalLabel">
                     <i class="fas fa-robot"></i> AI Book Assistant
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="chat-container" id="chatContainer">
-                    <div class="chat-messages" id="chatMessages">
+                <div id="chatContainer">
+                    <div id="chatMessages">
                         <div class="ai-message">
-                            <i class="fas fa-robot"></i>
                             <div class="message-content">
-                                Hello! I'm your AI librarian. Tell me what kind of books you're looking for, and I'll recommend the best ones from our collection!
+                                <i class="fas fa-robot text-primary"></i>
+                                <strong>Hello! I'm your AI librarian.</strong><br>
+                                Tell me what kind of books you're looking for, and I'll recommend the best ones from our collection!
+                                <br><small class="text-muted">Example: "Show me programming books" or "Recommend books about AI"</small>
                             </div>
                         </div>
                     </div>
-                    <div class="chat-input">
-                        <input type="text" id="aiInput" class="form-control" placeholder="Ask me about books...">
-                        <button onclick="sendAIMessage()" class="btn btn-primary">
+                    <div class="chat-input-container">
+                        <input type="text" id="aiInput" class="form-control"
+                               placeholder="Ask me about books... (e.g., 'Show me programming books')">
+                        <button onclick="sendAIMessage()" class="btn btn-gradient">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
                 </div>
             </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    // ============================================================
+    // AI ASSISTANT FUNCTIONS
+    // ============================================================
+
+    function showAIAssistant() {
+        const modal = new bootstrap.Modal(document.getElementById('aiModal'));
+        modal.show();
+        // Focus on input when modal opens
+        setTimeout(() => {
+            document.getElementById('aiInput').focus();
+        }, 500);
+    }
+
+    async function sendAIMessage() {
+        const input = document.getElementById('aiInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        const messagesDiv = document.getElementById('chatMessages');
+
+        // Add user message
+        const userMsgDiv = document.createElement('div');
+        userMsgDiv.className = 'user-message';
+        userMsgDiv.innerHTML = `
+            <div class="message-content">
+                ${escapeHtml(message)}
+            </div>
+        `;
+        messagesDiv.appendChild(userMsgDiv);
+
+        input.value = '';
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // Show typing indicator
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'ai-message';
+        typingDiv.id = 'typingIndicator';
+        typingDiv.innerHTML = `
+            <div class="message-content typing-indicator">
+                <span></span><span></span><span></span>
+            </div>
+        `;
+        messagesDiv.appendChild(typingDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        try {
+            const response = await fetch('/api/ai/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ query: message })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const result = await response.json();
+
+            // Remove typing indicator
+            const typingElement = document.getElementById('typingIndicator');
+            if (typingElement) typingElement.remove();
+
+            // Display recommendations
+            if (result.recommendations && result.recommendations.length > 0) {
+                const aiMsgDiv = document.createElement('div');
+                aiMsgDiv.className = 'ai-message';
+
+                let html = `<div class="message-content" style="max-width: 95%;">`;
+                html += `<strong>📚 Found ${result.count} books matching your search:</strong>`;
+                html += `<div style="margin-top: 10px;">`;
+
+                result.recommendations.forEach(book => {
+                    const status = book.availableQuantity > 0 ?
+                        '<span class="badge badge-available"><i class="fas fa-check-circle"></i> Available</span>' :
+                        '<span class="badge badge-borrowed"><i class="fas fa-times-circle"></i> Borrowed</span>';
+
+                    html += `
+                        <div class="recommendation-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div style="flex: 1;">
+                                    <strong>${escapeHtml(book.title)}</strong>
+                                    <br>
+                                    <small class="text-muted">by ${escapeHtml(book.author)}</small>
+                                    <br>
+                                    <small><span class="badge bg-info">${escapeHtml(book.category || 'Uncategorized')}</span></small>
+                                </div>
+                                <div style="text-align: right; min-width: 100px;">
+                                    ${status}
+                                    <br>
+                                    <a href="/books/${book.id}" class="btn btn-sm btn-primary mt-1" style="border-radius: 20px; text-decoration: none;">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+                aiMsgDiv.innerHTML = html;
+                messagesDiv.appendChild(aiMsgDiv);
+            } else {
+                const aiMsgDiv = document.createElement('div');
+                aiMsgDiv.className = 'ai-message';
+                aiMsgDiv.innerHTML = `
+                    <div class="message-content">
+                        <i class="fas fa-frown text-warning"></i>
+                        Sorry, I couldn't find any books matching "<strong>${escapeHtml(message)}</strong>".
+                        <br>Try different keywords or browse all books.
+                        <br><a href="/books" class="btn btn-sm btn-gradient mt-2">Browse All Books</a>
+                    </div>
+                `;
+                messagesDiv.appendChild(aiMsgDiv);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            const typingElement = document.getElementById('typingIndicator');
+            if (typingElement) typingElement.remove();
+
+            const aiMsgDiv = document.createElement('div');
+            aiMsgDiv.className = 'ai-message';
+            aiMsgDiv.innerHTML = `
+                <div class="message-content" style="background: #f8d7da; color: #721c24;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Sorry, I encountered an error while searching. Please try again.
+                </div>
+            `;
+            messagesDiv.appendChild(aiMsgDiv);
+        }
+
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Handle Enter key in chat input
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const input = document.getElementById('aiInput');
+            if (input && document.activeElement === input) {
+                e.preventDefault();
+                sendAIMessage();
+            }
+        }
+    });
+
+    // ============================================================
+    // ALERT FUNCTIONS
+    // ============================================================
+
+    function showAlert(message, type = 'success') {
+        const container = document.getElementById('alertContainer');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        alertDiv.innerHTML = `
+            <i class="fas ${icon}"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        container.appendChild(alertDiv);
+
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.classList.remove('show');
+                setTimeout(() => alertDiv.remove(), 300);
+            }
+        }, 5000);
+    }
+
+    // ============================================================
+    // FLASH MESSAGES FROM SERVER
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check for flash messages
+        const successMsg = document.querySelector('[th\\:if="${success}"]');
+        const errorMsg = document.querySelector('[th\\:if="${error}"]');
+
+        if (successMsg) {
+            showAlert(successMsg.textContent, 'success');
+        }
+        if (errorMsg) {
+            showAlert(errorMsg.textContent, 'danger');
+        }
+
+        // Auto-close any alerts after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const closeBtn = alert.querySelector('.btn-close');
+                if (closeBtn) closeBtn.click();
+            });
+        }, 5000);
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
