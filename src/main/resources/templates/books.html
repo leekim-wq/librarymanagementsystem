@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Browse Books</title>
+</head>
+<body>
+<th:block th:fragment="content">
+    <div class="container mt-4">
+        <h2><i class="fas fa-book"></i> Our Collection</h2>
+
+        <!-- Search Bar -->
+        <div class="search-bar mb-4">
+            <div class="input-group">
+                <input type="text" id="searchInput" class="form-control"
+                       placeholder="Search by title, author, or keyword...">
+                <button class="btn btn-primary" onclick="performSearch()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="mb-4">
+            <a href="/books" class="btn btn-outline-primary me-2">All</a>
+            <a th:each="category : ${categories}"
+               th:href="'/books?category=' + ${category}"
+               class="btn btn-outline-secondary me-2"
+               th:text="${category}">Category</a>
+        </div>
+
+        <!-- Books Grid -->
+        <div class="row">
+            <th:block th:each="book : ${books}">
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 hover-card">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${book.title}">Title</h5>
+                            <p class="card-text text-muted">
+                                <i class="fas fa-user"></i> <span th:text="${book.author}">Author</span>
+                            </p>
+                            <p class="card-text">
+                                <span class="badge bg-info" th:text="${book.category}">Category</span>
+                                <span class="badge" th:classappend="${book.availableQuantity > 0 ? 'bg-success' : 'bg-danger'}">
+                                        <span th:if="${book.availableQuantity > 0}">Available</span>
+                                        <span th:unless="${book.availableQuantity > 0}">Borrowed</span>
+                                    </span>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-warning">
+                                        <i class="fas fa-star"></i> <span th:text="${book.rating}">0.0</span>
+                                    </span>
+                                <small class="text-muted">
+                                    <i class="fas fa-book"></i> <span th:text="${book.totalBorrows}">0</span>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a th:href="'/books/' + ${book.id}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
