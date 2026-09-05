@@ -1,287 +1,468 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Library System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        /* ---------- RESET & BASE ---------- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background: #f0f2f5;
             min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
         }
+        body.dark-mode {
+            background: #121212;
+            color: #e0e0e0;
+        }
+        body.dark-mode .navbar-custom { background: #1e1e2f; border-bottom-color: #bb86fc; }
+        body.dark-mode .stat-card, body.dark-mode .feature-card, body.dark-mode .book-card,
+        body.dark-mode .loan-card, body.dark-mode .cta-section { background: #1e1e2f; color: #e0e0e0; }
+        body.dark-mode .stat-card .number { color: #bb86fc; }
+        body.dark-mode .section-title { color: #fff; }
+        body.dark-mode .feature-card p, body.dark-mode .text-muted { color: #aaa; }
+
+        /* ---------- SCROLL ANIMATIONS ---------- */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ---------- NAVBAR ---------- */
         .navbar-custom {
-            background: rgba(255,255,255,0.1) !important;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 12px 0;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+            border-bottom: 3px solid #e94560;
+            transition: background 0.3s;
+            position: sticky;
+            top: 0;
+            z-index: 1050;
         }
-        .main-card {
-            max-width: 1100px;
-            margin: 30px auto;
-            background: white;
-            border-radius: 30px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        .navbar-custom .navbar-brand {
+            font-weight: 900;
+            font-size: 1.6rem;
+            color: #fff !important;
+            letter-spacing: -0.5px;
         }
-        .logo-icon {
-            font-size: 4rem;
-            color: #667eea;
+        .navbar-custom .navbar-brand i { color: #e94560; margin-right: 10px; }
+        .navbar-custom .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 8px 18px;
+            border-radius: 25px;
+            position: relative;
         }
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .navbar-custom .nav-link:hover {
+            color: #fff !important;
+            background: rgba(233, 69, 96, 0.2);
+            transform: translateY(-2px);
+        }
+        .navbar-custom .nav-link.active {
+            color: #fff !important;
+            background: #e94560;
+        }
+        .navbar-custom .dropdown-menu {
+            background: #1a1a2e;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            padding: 10px 0;
+        }
+        .navbar-custom .dropdown-item {
+            color: #ddd;
+            padding: 10px 24px;
+            transition: all 0.2s;
+            border-radius: 10px;
+            margin: 2px 8px;
+        }
+        .navbar-custom .dropdown-item:hover {
+            background: #e94560;
+            color: #fff;
+        }
+        .navbar-custom .dropdown-toggle::after { color: #e94560; }
+        .user-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 16px;
+            border-radius: 25px;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.15);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .user-badge i { color: #e94560; margin-right: 8px; }
+        .cart-badge {
+            background: #e94560;
+            color: #fff;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+        .dark-toggle {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            border-radius: 25px;
+            padding: 6px 14px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .dark-toggle:hover { background: rgba(255,255,255,0.2); }
+
+        /* ---------- HERO ---------- */
+        .hero-section {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 100px 0 70px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.4;
+        }
+        .hero-section .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        .floating-shapes span {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(233,69,96,0.08);
+            animation: float 25s infinite ease-in-out;
+        }
+        .floating-shapes span:nth-child(1) { width: 300px; height: 300px; top: -80px; left: -80px; animation-delay: 0s; }
+        .floating-shapes span:nth-child(2) { width: 400px; height: 400px; bottom: -120px; right: -120px; animation-delay: -7s; background: rgba(102,126,234,0.08); }
+        .floating-shapes span:nth-child(3) { width: 200px; height: 200px; top: 40%; left: 60%; animation-delay: -14s; background: rgba(243,156,18,0.06); }
+        @keyframes float {
+            0% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(30px,-40px) scale(1.1); }
+            66% { transform: translate(-20px,20px) scale(0.9); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+        .hero-title {
+            font-size: 3.8rem;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.1;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -1px;
+        }
+        .hero-title .highlight {
+            color: #e94560;
+            background: linear-gradient(135deg, #e94560, #ff6b81);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            position: relative;
         }
-        .btn-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 12px 30px;
-            border-radius: 50px;
-            transition: all 0.3s;
-            font-weight: 600;
+        .hero-title .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: rgba(233,69,96,0.25);
+            border-radius: 10px;
+            -webkit-text-fill-color: initial;
         }
-        .btn-gradient:hover {
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        .hero-subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 1.25rem;
+            max-width: 500px;
+            line-height: 1.8;
+            position: relative;
+            z-index: 1;
         }
-        .btn-outline-gradient {
-            border: 2px solid #667eea;
-            color: #667eea;
-            background: transparent;
-            padding: 12px 30px;
-            border-radius: 50px;
-            transition: all 0.3s;
-            font-weight: 600;
+        .hero-stats {
+            display: flex;
+            gap: 50px;
+            margin-top: 30px;
+            position: relative;
+            z-index: 1;
         }
-        .btn-outline-gradient:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
-            transform: scale(1.05);
+        .hero-stat .number {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #e94560;
+            display: block;
+            transition: 0.3s;
         }
-        .feature-card {
-            padding: 25px;
-            border-radius: 15px;
-            transition: all 0.3s;
-            background: #f8f9fa;
-            height: 100%;
-            cursor: pointer;
-        }
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            background: white;
-        }
-        .feature-icon {
-            font-size: 2.5rem;
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-        .stat-card {
+        .hero-stat .label { color: rgba(255,255,255,0.6); font-size: 0.9rem; font-weight: 400; }
+        .hero-image {
+            position: relative;
+            z-index: 1;
             text-align: center;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            transition: all 0.3s;
         }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        .hero-image .floating-icon {
+            font-size: 10rem;
+            color: rgba(233,69,96,0.15);
+            animation: floatIcon 6s ease-in-out infinite;
         }
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-        .search-container {
-            background: white;
-            border-radius: 50px;
-            padding: 5px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        .search-container input {
-            border: none;
-            padding: 15px 25px;
-            border-radius: 50px 0 0 50px;
-            background: transparent;
-        }
-        .search-container input:focus {
-            outline: none;
-            box-shadow: none;
-        }
-        .search-container button {
-            border-radius: 50px;
-            padding: 15px 30px;
-        }
-        .book-card {
-            border: none;
-            border-radius: 15px;
-            transition: all 0.3s;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .book-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-        .badge-available {
-            background: #27ae60;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-        }
-        .badge-borrowed {
-            background: #e74c3c;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-        }
-        .alert {
-            border-radius: 15px;
-            border: none;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-        }
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(4deg); }
         }
 
-        /* AI Chat Styles */
-        #chatContainer {
-            height: 400px;
-            display: flex;
-            flex-direction: column;
+        /* ---------- STATS SECTION ---------- */
+        .stats-section { margin-top: -50px; position: relative; z-index: 2; }
+        .stat-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 25px 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            border: none;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.85);
         }
-        #chatMessages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            margin-bottom: 15px;
+        .stat-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
         }
-        .ai-message {
-            display: flex;
-            margin-bottom: 12px;
-            animation: fadeIn 0.3s ease;
-        }
-        .user-message {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 12px;
-            animation: fadeIn 0.3s ease;
-        }
-        .ai-message .message-content {
-            background: #e3f2fd;
-            padding: 12px 18px;
+        .stat-card .icon {
+            width: 65px;
+            height: 65px;
             border-radius: 18px;
-            border-bottom-left-radius: 5px;
-            max-width: 85%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .user-message .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 18px;
-            border-radius: 18px;
-            border-bottom-right-radius: 5px;
-            max-width: 85%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .chat-input-container {
-            display: flex;
-            gap: 10px;
-        }
-        .chat-input-container input {
-            flex: 1;
-            border-radius: 25px;
-            padding: 12px 20px;
-            border: 2px solid #e0e0e0;
-            transition: all 0.3s;
-        }
-        .chat-input-container input:focus {
-            border-color: #667eea;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        .chat-input-container button {
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.8rem;
+            transition: 0.3s;
         }
-        .recommendation-item {
-            padding: 10px 15px;
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: all 0.3s;
+        .stat-card:hover .icon { transform: scale(1.1) rotate(2deg); }
+        .stat-card .icon.primary { background: rgba(102,126,234,0.15); color: #667eea; }
+        .stat-card .icon.success { background: rgba(39,174,96,0.15); color: #27ae60; }
+        .stat-card .icon.warning { background: rgba(243,156,18,0.15); color: #f39c12; }
+        .stat-card .icon.danger { background: rgba(233,69,96,0.15); color: #e94560; }
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #1a1a2e;
+            letter-spacing: -1px;
         }
-        .recommendation-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .stat-card .label { color: #6c757d; font-weight: 500; margin-top: 4px; }
+
+        /* ---------- FEATURES ---------- */
+        .section-title {
+            font-weight: 800;
+            color: #1a1a2e;
+            font-size: 2.2rem;
+            margin-bottom: 2rem;
         }
-        .typing-indicator {
-            display: inline-block;
-            padding: 8px 15px;
-            background: #e3f2fd;
-            border-radius: 18px;
-        }
-        .typing-indicator span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #667eea;
-            margin: 0 3px;
-            animation: typing 1.4s infinite both;
-        }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-10px); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px 15px 0 0;
-        }
-        .modal-content {
-            border-radius: 15px;
+        .section-title i { color: #e94560; }
+        .feature-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: none;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            height: 100%;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.8);
         }
-        .modal-footer {
-            border-top: none;
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #e94560);
+            transform: scaleX(0);
+            transition: transform 0.4s;
         }
-        .btn-close-white {
-            filter: brightness(0) invert(1);
+        .feature-card:hover::before { transform: scaleX(1); }
+        .feature-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+        }
+        .feature-card .icon {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        .feature-card:hover .icon { transform: scale(1.1) rotate(2deg); }
+        .feature-card .icon.blue { color: #667eea; }
+        .feature-card .icon.pink { color: #e94560; }
+        .feature-card .icon.green { color: #27ae60; }
+        .feature-card .icon.orange { color: #f39c12; }
+        .feature-card h5 { font-weight: 700; color: #1a1a2e; }
+        .feature-card p { color: #6c757d; font-size: 0.95rem; }
+
+        /* ---------- BOOK CARDS ---------- */
+        .book-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            height: 100%;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.8);
+        }
+        .book-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .book-card .book-cover {
+            height: 140px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 3rem;
+            transition: 0.3s;
+        }
+        .book-card:hover .book-cover { transform: scale(1.02); }
+        .book-card .book-cover.green { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .book-card .book-cover.orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .book-card .book-cover.pink { background: linear-gradient(135deg, #e94560, #c0392b); }
+        .book-card .book-cover.purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .book-card .card-body { padding: 18px; }
+        .book-card .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .book-card .card-text { font-size: 0.85rem; color: #6c757d; }
+        .badge-available { background: #27ae60; color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .badge-borrowed { background: #e94560; color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+
+        /* ---------- CTA ---------- */
+        .cta-section {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 30px;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+        .cta-section h3 { color: #fff; font-weight: 800; position: relative; z-index: 1; }
+        .cta-section p { color: rgba(255,255,255,0.7); position: relative; z-index: 1; }
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: #fff;
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+        .btn-primary-gradient:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102,126,234,0.4);
+            color: #fff;
+        }
+        .btn-outline-light-custom {
+            border: 2px solid rgba(255,255,255,0.3);
+            color: #fff;
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+        .btn-outline-light-custom:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: #fff;
+            color: #fff;
+        }
+
+        /* ---------- FOOTER ---------- */
+        footer {
+            background: #1a1a2e;
+            color: rgba(255,255,255,0.6);
+            padding: 30px 0;
+        }
+        footer a { color: rgba(255,255,255,0.6); transition: 0.3s; text-decoration: none; }
+        footer a:hover { color: #e94560; }
+
+        /* ---------- DARK MODE OVERRIDES ---------- */
+        body.dark-mode .stat-card { background: #1e1e2f; }
+        body.dark-mode .feature-card { background: #1e1e2f; }
+        body.dark-mode .book-card { background: #1e1e2f; }
+        body.dark-mode .book-card .card-title { color: #fff; }
+        body.dark-mode .book-card .card-text { color: #aaa; }
+        body.dark-mode .stat-card .number { color: #bb86fc; }
+        body.dark-mode .section-title { color: #fff; }
+        body.dark-mode .feature-card p { color: #aaa; }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 992px) {
+            .hero-title { font-size: 2.8rem; }
+            .hero-stats { gap: 30px; flex-wrap: wrap; }
+            .hero-image .floating-icon { font-size: 6rem; }
+        }
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.2rem; }
+            .hero-section { padding: 70px 0 50px; }
+            .stats-section { margin-top: 0; }
+            .navbar-custom .navbar-brand { font-size: 1.3rem; }
+            .user-badge { font-size: 0.8rem; padding: 4px 10px; }
+            .cta-section { padding: 30px 20px; }
+            .floating-shapes span { display: none; }
+        }
+        @media (max-width: 576px) {
+            .hero-title { font-size: 1.8rem; }
+            .hero-subtitle { font-size: 1rem; }
+            .hero-stats { gap: 15px; }
+            .hero-stat .number { font-size: 1.6rem; }
         }
     </style>
 </head>
 <body>
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+
+<!-- ============================================ -->
+<!-- NAVBAR -->
+<!-- ============================================ -->
+<nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container">
         <a class="navbar-brand" href="/">
             <i class="fas fa-book-open"></i> Smart Library
@@ -290,191 +471,318 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link active" href="/"><i class="fas fa-home"></i> Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="/books"><i class="fas fa-book"></i> Books</a></li>
-                <li class="nav-item"><a class="nav-link" href="#" onclick="showAIAssistant()"><i class="fas fa-robot"></i> AI Assistant</a></li>
+                <li class="nav-item"><a class="nav-link" href="/cart"><i class="fas fa-shopping-cart"></i> Cart <span class="cart-badge" th:text="${cartCount}">0</span></a></li>
+
+                <!-- Admin Dropdown -->
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-shield"></i> Admin
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/admin/users"><i class="fas fa-users"></i> Manage Users</a></li>
+                        <li><a class="dropdown-item" href="/books/add"><i class="fas fa-plus"></i> Add Book</a></li>
+                    </ul>
+                </li>
+
+                <!-- Librarian Dropdown -->
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-book-open"></i> Manage
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/books/add"><i class="fas fa-plus"></i> Add Book</a></li>
+                        <li><a class="dropdown-item" href="/books"><i class="fas fa-edit"></i> Edit Books</a></li>
+                    </ul>
+                </li>
+
+                <!-- My Loans -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/loans"><i class="fas fa-hand-holding-heart"></i> My Loans</a>
+                </li>
+
+                <!-- AI Assistant (modal trigger) -->
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showAIAssistant()">
+                        <i class="fas fa-robot"></i> AI Assistant
+                    </a>
+                </li>
+
+                <!-- User badge -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <span class="user-badge">
+                        <i class="fas fa-user-circle"></i> <span sec:authentication="name">User</span>
+                    </span>
+                </li>
+
+                <!-- Dark mode toggle -->
+                <li class="nav-item">
+                    <button class="dark-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </li>
+
+                <!-- Auth buttons -->
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
+                </li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" href="/register"><i class="fas fa-user-plus"></i> Register</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
             </ul>
         </div>
     </div>
 </nav>
 
-<!-- Main Content -->
-<div class="container">
-    <div class="main-card">
-        <!-- Alerts Container -->
-        <div id="alertContainer"></div>
-
-        <!-- Header -->
-        <div class="text-center mb-4">
-            <div class="logo-icon">
-                <i class="fas fa-book-open"></i>
-            </div>
-            <h1 class="display-4 fw-bold gradient-text">
-                Smart Library System
-            </h1>
-            <p class="lead text-muted">
-                <i class="fas fa-robot text-primary"></i>
-                AI-Powered Library Management
-            </p>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="row mb-4">
-            <div class="col-md-8 mx-auto">
-                <form action="/books" method="get" class="search-container d-flex">
-                    <input type="text" name="search" class="form-control"
-                           placeholder="Search for books by title, author, or category...">
-                    <button type="submit" class="btn btn-gradient">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Statistics -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-number" th:text="${totalBooks}">0</div>
-                    <div class="text-muted"><i class="fas fa-book"></i> Total Books</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-number" th:text="${availableBooks}">0</div>
-                    <div class="text-muted"><i class="fas fa-check-circle text-success"></i> Available</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-number" th:text="${totalMembers}">0</div>
-                    <div class="text-muted"><i class="fas fa-users"></i> Members</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Features -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="feature-card text-center" onclick="window.location.href='/books'">
-                    <div class="feature-icon"><i class="fas fa-search"></i></div>
-                    <h5>Browse Books</h5>
-                    <p class="text-muted small">Search and discover new books</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card text-center" onclick="showAIAssistant()">
-                    <div class="feature-icon"><i class="fas fa-robot"></i></div>
-                    <h5>AI Assistant</h5>
-                    <p class="text-muted small">Get intelligent book recommendations</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="feature-card text-center" onclick="window.location.href='/books'">
-                    <div class="feature-icon"><i class="fas fa-hand-holding-heart"></i></div>
-                    <h5>Easy Borrowing</h5>
-                    <p class="text-muted small">Borrow books with one click</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- AI Recommended Books -->
-        <h4 class="mb-3"><i class="fas fa-robot text-primary"></i> AI Recommended for You</h4>
-        <div class="row">
-            <div th:each="book : ${recommendedBooks}" class="col-lg-3 col-md-4 col-sm-6 mb-3">
-                <div class="card book-card h-100">
-                    <div class="card-body">
-                        <h6 class="card-title" th:text="${book.title}">Title</h6>
-                        <p class="card-text text-muted small">
-                            <i class="fas fa-user"></i> <span th:text="${book.author}">Author</span>
-                        </p>
-                        <span class="badge bg-info" th:text="${book.category}">Category</span>
-                        <span class="badge" th:classappend="${book.availableQuantity > 0 ? 'badge-available' : 'badge-borrowed'}">
-                                <span th:if="${book.availableQuantity > 0}"><i class="fas fa-check-circle"></i> Available</span>
-                                <span th:unless="${book.availableQuantity > 0}"><i class="fas fa-times-circle"></i> Borrowed</span>
-                            </span>
+<!-- ============================================ -->
+<!-- HERO SECTION -->
+<!-- ============================================ -->
+<section class="hero-section" id="hero">
+    <div class="floating-shapes">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h1 class="hero-title">
+                    Welcome to <br>
+                    <span class="highlight">Smart Library</span> System
+                </h1>
+                <p class="hero-subtitle">
+                    Your AI-powered library management solution. Discover, borrow,
+                    and manage books with intelligent recommendations.
+                </p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="number" th:text="${totalBooks}">0</span>
+                        <span class="label">Total Books</span>
                     </div>
-                    <div class="card-footer bg-transparent">
-                        <a th:href="'/books/' + ${book.id}" class="btn btn-outline-primary w-100 btn-sm">
-                            <i class="fas fa-eye"></i> View Details
-                        </a>
+                    <div class="hero-stat">
+                        <span class="number" th:text="${availableBooks}">0</span>
+                        <span class="label">Available</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="number" th:text="${totalMembers}">0</span>
+                        <span class="label">Members</span>
                     </div>
                 </div>
+                <div class="mt-4">
+                    <a href="/books" class="btn btn-primary-gradient me-3">
+                        <i class="fas fa-book"></i> Browse Books
+                    </a>
+                    <a href="#" class="btn btn-outline-light-custom" onclick="showAIAssistant()">
+                        <i class="fas fa-robot"></i> AI Assistant
+                    </a>
+                </div>
             </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="text-center mt-4">
-            <a href="/books" class="btn btn-gradient me-3">
-                <i class="fas fa-book"></i> Browse All Books
-            </a>
-            <button onclick="showAIAssistant()" class="btn btn-outline-gradient">
-                <i class="fas fa-robot"></i> AI Assistant
-            </button>
-        </div>
-
-        <!-- Footer -->
-        <div class="text-center mt-4 pt-3 border-top">
-            <small class="text-muted">
-                <i class="fas fa-code"></i> Spring Boot &nbsp;|&nbsp;
-                <i class="fas fa-database"></i> MySQL &nbsp;|&nbsp;
-                <i class="fas fa-brain"></i> AI Powered
-            </small>
+            <div class="col-lg-5 hero-image">
+                <div class="floating-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- AI Assistant Modal -->
-<div class="modal fade" id="aiModal" tabindex="-1" aria-labelledby="aiModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="aiModalLabel">
-                    <i class="fas fa-robot"></i> AI Book Assistant
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- ============================================ -->
+<!-- STATS SECTION -->
+<!-- ============================================ -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3 col-6 fade-up">
+                <div class="stat-card">
+                    <div class="icon primary"><i class="fas fa-book"></i></div>
+                    <div class="number" th:text="${totalBooks}">0</div>
+                    <div class="label">Total Books</div>
+                </div>
             </div>
-            <div class="modal-body">
-                <div id="chatContainer">
-                    <div id="chatMessages">
-                        <div class="ai-message">
-                            <div class="message-content">
+            <div class="col-md-3 col-6 fade-up" style="transition-delay:0.1s;">
+                <div class="stat-card">
+                    <div class="icon success"><i class="fas fa-check-circle"></i></div>
+                    <div class="number" th:text="${availableBooks}">0</div>
+                    <div class="label">Available Books</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 fade-up" style="transition-delay:0.2s;">
+                <div class="stat-card">
+                    <div class="icon warning"><i class="fas fa-users"></i></div>
+                    <div class="number" th:text="${totalMembers}">0</div>
+                    <div class="label">Active Members</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 fade-up" style="transition-delay:0.3s;">
+                <div class="stat-card">
+                    <div class="icon danger"><i class="fas fa-robot"></i></div>
+                    <div class="number">AI</div>
+                    <div class="label">Smart Recommendations</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- FEATURES SECTION -->
+<!-- ============================================ -->
+<section class="py-5">
+    <div class="container">
+        <h3 class="section-title text-center fade-up">
+            <i class="fas fa-star"></i> Why Choose Smart Library?
+        </h3>
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6 fade-up" style="transition-delay:0.05s;">
+                <div class="feature-card" onclick="window.location.href='/books'">
+                    <span class="icon blue"><i class="fas fa-search"></i></span>
+                    <h5>Smart Search</h5>
+                    <p>Find books instantly by title, author, or category</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 fade-up" style="transition-delay:0.1s;">
+                <div class="feature-card" onclick="showAIAssistant()">
+                    <span class="icon pink"><i class="fas fa-robot"></i></span>
+                    <h5>AI Recommendations</h5>
+                    <p>Get personalized book suggestions from our AI</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 fade-up" style="transition-delay:0.15s;">
+                <div class="feature-card" onclick="window.location.href='/books'">
+                    <span class="icon green"><i class="fas fa-hand-holding-heart"></i></span>
+                    <h5>Easy Borrowing</h5>
+                    <p>Borrow and return books with just one click</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 fade-up" style="transition-delay:0.2s;">
+                <div class="feature-card" sec:authorize="hasRole('ADMIN')" onclick="window.location.href='/admin/dashboard'">
+                    <span class="icon orange"><i class="fas fa-chart-line"></i></span>
+                    <h5>Admin Dashboard</h5>
+                    <p>Full control over users, books, and analytics</p>
+                </div>
+                <div class="feature-card" sec:authorize="!hasRole('ADMIN')" onclick="window.location.href='/loans'">
+                    <span class="icon orange"><i class="fas fa-clock"></i></span>
+                    <h5>Track Loans</h5>
+                    <p>View your borrowing history and due dates</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- AI RECOMMENDED BOOKS -->
+<!-- ============================================ -->
+<section class="py-4" th:if="${recommendedBooks != null and !recommendedBooks.isEmpty()}">
+    <div class="container">
+        <h4 class="section-title fade-up">
+            <i class="fas fa-robot text-primary"></i> AI Recommended for You
+        </h4>
+        <div class="row">
+            <div th:each="book : ${recommendedBooks}" class="col-lg-2 col-md-3 col-6 mb-3 fade-up">
+                <div class="book-card">
+                    <div class="book-cover" th:classappend="${book.category == 'Programming' ? 'green' : book.category == 'Web Development' ? 'orange' : book.category == 'Data Science' ? 'pink' : 'purple'}">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title" th:text="${book.title.length() > 20 ? book.title.substring(0,20) + '...' : book.title}">Title</div>
+                        <div class="card-text" th:text="${book.author.length() > 15 ? book.author.substring(0,15) + '...' : book.author}">Author</div>
+                        <span class="badge-available" th:if="${book.availableQuantity > 0}">Available</span>
+                        <span class="badge-borrowed" th:unless="${book.availableQuantity > 0}">Borrowed</span>
+                        <a th:href="'/books/' + ${book.id}" class="btn btn-sm btn-outline-primary w-100 mt-2">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- CTA SECTION -->
+<!-- ============================================ -->
+<section class="py-5">
+    <div class="container fade-up">
+        <div class="cta-section">
+            <h3>Ready to Explore?</h3>
+            <p>Join thousands of readers discovering their next favorite book.</p>
+            <div class="mt-3">
+                <a href="/books" class="btn btn-primary-gradient me-3">
+                    <i class="fas fa-book"></i> Browse Collection
+                </a>
+                <a href="#" class="btn btn-outline-light-custom" onclick="showAIAssistant()">
+                    <i class="fas fa-robot"></i> Ask AI
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- AI ASSISTANT MODAL -->
+<!-- ============================================ -->
+<div class="modal fade" id="aiModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: 24px; background: #1e1e2f; color: #fff;">
+            <div class="modal-header" style="border-bottom: 1px solid #333; background: #1a1a2e; border-radius: 24px 24px 0 0;">
+                <h5 class="modal-title"><i class="fas fa-robot text-danger"></i> AI Book Assistant</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="background: #1a1a2e; padding: 20px;">
+                <div class="chat-container" style="height: 400px; display: flex; flex-direction: column;">
+                    <div class="chat-messages" id="chatMessages" style="flex:1; overflow-y:auto; background: #0f0f1e; border-radius: 16px; padding: 15px; margin-bottom: 15px;">
+                        <div class="ai-msg" style="display:flex; margin-bottom: 12px;">
+                            <div class="content" style="background: #2d2d44; padding: 10px 16px; border-radius: 15px 15px 15px 5px; max-width:85%; color:#fff;">
                                 <i class="fas fa-robot text-primary"></i>
-                                <strong>Hello! I'm your AI librarian.</strong><br>
-                                Tell me what kind of books you're looking for, and I'll recommend the best ones from our collection!
-                                <br><small class="text-muted">Example: "Show me programming books" or "Recommend books about AI"</small>
+                                Hello! I'm your AI librarian. Tell me what kind of books you're looking for!
                             </div>
                         </div>
                     </div>
-                    <div class="chat-input-container">
-                        <input type="text" id="aiInput" class="form-control"
-                               placeholder="Ask me about books... (e.g., 'Show me programming books')">
-                        <button onclick="sendAIMessage()" class="btn btn-gradient">
+                    <div class="input-group">
+                        <input type="text" id="aiInput" class="form-control" placeholder="Ask about books..." style="border-radius: 25px 0 0 25px; background: #0f0f1e; border: 1px solid #333; color: #fff;">
+                        <button onclick="sendAIMessage()" class="btn btn-danger-gradient" style="border-radius: 0 25px 25px 0; background: linear-gradient(135deg, #e94560, #c0392b); border: none; padding: 0 20px; color: #fff;">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
         </div>
     </div>
 </div>
 
-<script>
-    // ============================================================
-    // AI ASSISTANT FUNCTIONS
-    // ============================================================
+<!-- ============================================ -->
+<!-- FOOTER -->
+<!-- ============================================ -->
+<footer>
+    <div class="container text-center">
+        <p class="mb-0">
+            <i class="fas fa-code text-danger"></i> Built with Spring Boot &nbsp;|&nbsp;
+            <i class="fas fa-database text-primary"></i> MySQL &nbsp;|&nbsp;
+            <i class="fas fa-brain text-warning"></i> AI Powered
+            <span class="mx-2">|</span>
+            <a href="#" class="text-white-50"><i class="fab fa-github"></i></a>
+            <a href="#" class="text-white-50 ms-2"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-white-50 ms-2"><i class="fab fa-linkedin-in"></i></a>
+        </p>
+        <small>&copy; 2026 Smart Library System. All rights reserved.</small>
+    </div>
+</footer>
 
+<!-- ============================================ -->
+<!-- SCRIPTS -->
+<!-- ============================================ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ============================================
+    // AI ASSISTANT (same as before, improved)
+    // ============================================
     function showAIAssistant() {
-        const modal = new bootstrap.Modal(document.getElementById('aiModal'));
-        modal.show();
-        // Focus on input when modal opens
-        setTimeout(() => {
-            document.getElementById('aiInput').focus();
-        }, 500);
+        new bootstrap.Modal(document.getElementById('aiModal')).show();
     }
 
     async function sendAIMessage() {
@@ -485,190 +793,115 @@
         const messagesDiv = document.getElementById('chatMessages');
 
         // Add user message
-        const userMsgDiv = document.createElement('div');
-        userMsgDiv.className = 'user-message';
-        userMsgDiv.innerHTML = `
-            <div class="message-content">
-                ${escapeHtml(message)}
+        messagesDiv.innerHTML += `
+            <div class="user-msg" style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+                <div class="content" style="background: #667eea; padding:10px 16px; border-radius:15px 15px 5px 15px; max-width:85%; color:#fff;">${message}</div>
             </div>
         `;
-        messagesDiv.appendChild(userMsgDiv);
-
         input.value = '';
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-        // Show typing indicator
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'ai-message';
-        typingDiv.id = 'typingIndicator';
-        typingDiv.innerHTML = `
-            <div class="message-content typing-indicator">
-                <span></span><span></span><span></span>
-            </div>
-        `;
-        messagesDiv.appendChild(typingDiv);
+        // Loading
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'ai-msg';
+        loadingDiv.style.display = 'flex';
+        loadingDiv.style.marginBottom = '12px';
+        loadingDiv.innerHTML = `<div class="content" style="background: #2d2d44; padding:10px 16px; border-radius:15px 15px 15px 5px; max-width:85%; color:#fff;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>`;
+        messagesDiv.appendChild(loadingDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
         try {
             const response = await fetch('/api/ai/recommend', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: message })
             });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
             const result = await response.json();
+            loadingDiv.remove();
 
-            // Remove typing indicator
-            const typingElement = document.getElementById('typingIndicator');
-            if (typingElement) typingElement.remove();
-
-            // Display recommendations
             if (result.recommendations && result.recommendations.length > 0) {
-                const aiMsgDiv = document.createElement('div');
-                aiMsgDiv.className = 'ai-message';
-
-                let html = `<div class="message-content" style="max-width: 95%;">`;
-                html += `<strong>📚 Found ${result.count} books matching your search:</strong>`;
-                html += `<div style="margin-top: 10px;">`;
-
+                let html = `<div class="content" style="background: #2d2d44; padding:15px; border-radius:15px; max-width:85%; color:#fff;"><strong>📚 Found ${result.count} books:</strong><br><br>`;
                 result.recommendations.forEach(book => {
-                    const status = book.availableQuantity > 0 ?
-                        '<span class="badge badge-available"><i class="fas fa-check-circle"></i> Available</span>' :
-                        '<span class="badge badge-borrowed"><i class="fas fa-times-circle"></i> Borrowed</span>';
-
                     html += `
-                        <div class="recommendation-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div style="flex: 1;">
-                                    <strong>${escapeHtml(book.title)}</strong>
-                                    <br>
-                                    <small class="text-muted">by ${escapeHtml(book.author)}</small>
-                                    <br>
-                                    <small><span class="badge bg-info">${escapeHtml(book.category || 'Uncategorized')}</span></small>
-                                </div>
-                                <div style="text-align: right; min-width: 100px;">
-                                    ${status}
-                                    <br>
-                                    <a href="/books/${book.id}" class="btn btn-sm btn-primary mt-1" style="border-radius: 20px; text-decoration: none;">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                </div>
+                        <div style="background: #1e1e2f; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${book.title}</strong>
+                                <br><small style="color:#aaa;">by ${book.author}</small>
+                            </div>
+                            <div>
+                                <span class="badge ${book.availableQuantity > 0 ? 'bg-success' : 'bg-danger'}">
+                                    ${book.availableQuantity > 0 ? 'Available' : 'Borrowed'}
+                                </span>
+                                <a href="/books/${book.id}" class="btn btn-sm btn-primary ms-1">View</a>
                             </div>
                         </div>
                     `;
                 });
-
-                html += `</div></div>`;
-                aiMsgDiv.innerHTML = html;
-                messagesDiv.appendChild(aiMsgDiv);
+                html += `</div>`;
+                messagesDiv.innerHTML += `<div class="ai-msg" style="display:flex; margin-bottom:12px;">${html}</div>`;
             } else {
-                const aiMsgDiv = document.createElement('div');
-                aiMsgDiv.className = 'ai-message';
-                aiMsgDiv.innerHTML = `
-                    <div class="message-content">
-                        <i class="fas fa-frown text-warning"></i>
-                        Sorry, I couldn't find any books matching "<strong>${escapeHtml(message)}</strong>".
-                        <br>Try different keywords or browse all books.
-                        <br><a href="/books" class="btn btn-sm btn-gradient mt-2">Browse All Books</a>
+                messagesDiv.innerHTML += `
+                    <div class="ai-msg" style="display:flex; margin-bottom:12px;">
+                        <div class="content" style="background: #2d2d44; padding:10px 16px; border-radius:15px 15px 15px 5px; max-width:85%; color:#fff;">
+                            Sorry, I couldn't find any books matching "${message}". Try a different search!
+                        </div>
                     </div>
                 `;
-                messagesDiv.appendChild(aiMsgDiv);
             }
         } catch (error) {
-            console.error('Error:', error);
-            const typingElement = document.getElementById('typingIndicator');
-            if (typingElement) typingElement.remove();
-
-            const aiMsgDiv = document.createElement('div');
-            aiMsgDiv.className = 'ai-message';
-            aiMsgDiv.innerHTML = `
-                <div class="message-content" style="background: #f8d7da; color: #721c24;">
-                    <i class="fas fa-exclamation-circle"></i>
-                    Sorry, I encountered an error while searching. Please try again.
+            loadingDiv.remove();
+            messagesDiv.innerHTML += `
+                <div class="ai-msg" style="display:flex; margin-bottom:12px;">
+                    <div class="content" style="background: #f8d7da; color:#721c24; padding:10px 16px; border-radius:15px; max-width:85%;">
+                        <i class="fas fa-exclamation-circle"></i> Error: Please try again.
+                    </div>
                 </div>
             `;
-            messagesDiv.appendChild(aiMsgDiv);
         }
-
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // Helper function to escape HTML
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // Handle Enter key in chat input
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             const input = document.getElementById('aiInput');
             if (input && document.activeElement === input) {
-                e.preventDefault();
                 sendAIMessage();
             }
         }
     });
 
-    // ============================================================
-    // ALERT FUNCTIONS
-    // ============================================================
-
-    function showAlert(message, type = 'success') {
-        const container = document.getElementById('alertContainer');
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.role = 'alert';
-        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-        alertDiv.innerHTML = `
-            <i class="fas ${icon}"></i> ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        container.appendChild(alertDiv);
-
-        // Auto dismiss after 5 seconds
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.classList.remove('show');
-                setTimeout(() => alertDiv.remove(), 300);
-            }
-        }, 5000);
+    // ============================================
+    // DARK MODE TOGGLE
+    // ============================================
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const btn = document.getElementById('darkModeToggle');
+        if (document.body.classList.contains('dark-mode')) {
+            btn.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            btn.innerHTML = '<i class="fas fa-moon"></i>';
+        }
     }
 
-    // ============================================================
-    // FLASH MESSAGES FROM SERVER
-    // ============================================================
-
+    // ============================================
+    // SCROLL ANIMATIONS (Intersection Observer)
+    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-        // Check for flash messages
-        const successMsg = document.querySelector('[th\\:if="${success}"]');
-        const errorMsg = document.querySelector('[th\\:if="${error}"]');
-
-        if (successMsg) {
-            showAlert(successMsg.textContent, 'success');
-        }
-        if (errorMsg) {
-            showAlert(errorMsg.textContent, 'danger');
-        }
-
-        // Auto-close any alerts after 5 seconds
-        setTimeout(() => {
-            document.querySelectorAll('.alert').forEach(alert => {
-                const closeBtn = alert.querySelector('.btn-close');
-                if (closeBtn) closeBtn.click();
+        const elements = document.querySelectorAll('.fade-up');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
             });
+        }, { threshold: 0.1 });
+        elements.forEach(el => observer.observe(el));
+
+        // Auto-hide alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(a => a.remove());
         }, 5000);
     });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

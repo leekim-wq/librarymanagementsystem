@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Loans - Smart Library</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        body.dark-mode {
+            background: #121212;
+            color: #e0e0e0;
+        }
+        body.dark-mode .navbar-custom { background: #1e1e2f; border-bottom-color: #bb86fc; }
+        body.dark-mode .loan-card { background: #1e1e2f; color: #e0e0e0; }
+        body.dark-mode .loan-card .text-muted { color: #aaa !important; }
+        body.dark-mode .page-header { background: linear-gradient(135deg, #1a1a2e, #0f3460); }
+        body.dark-mode .status-active { background: #1e3a2a; color: #8bc34a; }
+        body.dark-mode .status-overdue { background: #3a1e1e; color: #ef5350; }
+        body.dark-mode .status-returned { background: #2a2a2a; color: #aaa; }
+        body.dark-mode .empty-state { background: #1e1e2f; color: #e0e0e0; }
+        body.dark-mode .empty-state i { color: #bb86fc; }
+        body.dark-mode .btn-outline-danger { border-color: #ef5350; color: #ef5350; }
+        body.dark-mode .btn-outline-danger:hover { background: #ef5350; color: #fff; }
+
+        /* ---------- SCROLL ANIMATIONS ---------- */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ---------- NAVBAR (matches home) ---------- */
+        .navbar-custom {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 12px 0;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+            border-bottom: 3px solid #e94560;
+            transition: background 0.3s;
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+        }
+        .navbar-custom .navbar-brand {
+            font-weight: 900;
+            font-size: 1.6rem;
+            color: #fff !important;
+            letter-spacing: -0.5px;
+        }
+        .navbar-custom .navbar-brand i { color: #e94560; margin-right: 10px; }
+        .navbar-custom .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 8px 18px;
+            border-radius: 25px;
+        }
+        .navbar-custom .nav-link:hover {
+            color: #fff !important;
+            background: rgba(233, 69, 96, 0.2);
+            transform: translateY(-2px);
+        }
+        .navbar-custom .nav-link.active {
+            color: #fff !important;
+            background: #e94560;
+        }
+        .cart-badge {
+            background: #e94560;
+            color: #fff;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+        .dark-toggle {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            border-radius: 25px;
+            padding: 6px 14px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .dark-toggle:hover { background: rgba(255,255,255,0.2); }
+
+        /* ---------- PAGE HEADER ---------- */
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0 35px;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 35px;
+            position: relative;
+            overflow: hidden;
+        }
+        .page-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+        .page-header .container { position: relative; z-index: 1; }
+
+        /* ---------- LOAN CARDS (glassmorphism) ---------- */
+        .loan-card {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .loan-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+        }
+        .loan-card .book-title {
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        body.dark-mode .loan-card .book-title { color: #fff; }
+
+        /* Status badges */
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-returned {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .fine-warning {
+            color: #dc3545;
+            font-weight: 700;
+        }
+
+        /* Return button */
+        .btn-return {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            color: #fff;
+            padding: 8px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+        }
+        .btn-return:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40,167,69,0.4);
+            color: #fff;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .empty-state i {
+            font-size: 4.5rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: #fff;
+            padding: 12px 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+        .btn-gradient:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102,126,234,0.4);
+            color: #fff;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 768px) {
+            .navbar-custom .navbar-brand { font-size: 1.3rem; }
+            .page-header { padding: 25px 0; }
+            .loan-card { padding: 15px; }
+            .loan-card .col-md-3.text-end { text-align: left !important; margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-book-open"></i> Smart Library
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/books"><i class="fas fa-book"></i> Books</a></li>
+                <li class="nav-item"><a class="nav-link" href="/cart"><i class="fas fa-shopping-cart"></i> Cart <span class="cart-badge" th:text="${cartCount}">0</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="/loans"><i class="fas fa-hand-holding"></i> My Loans</a></li>
+                <li class="nav-item">
+                    <button class="dark-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-light btn-sm" style="border-radius:25px; padding:6px 18px;">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- ===== PAGE HEADER ===== -->
+<div class="page-header">
+    <div class="container">
+        <h2 class="fw-bold mb-0">
+            <i class="fas fa-hand-holding-heart"></i> My Borrowed Books
+        </h2>
+        <p class="mb-0 opacity-75">View and manage all your current loans</p>
+    </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="container">
+
+    <!-- Flash messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show fade-up" role="alert">
+        <i class="fas fa-check-circle"></i> <span th:text="${success}">Success</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show fade-up" role="alert">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${warning}" class="alert alert-warning alert-dismissible fade show fade-up" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> <span th:text="${warning}">Warning</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Loans List -->
+    <div th:if="${loans != null and !loans.isEmpty()}">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">
+                <i class="fas fa-list"></i> Showing <strong th:text="${loans.size()}">0</strong> loans
+            </span>
+        </div>
+
+        <div th:each="loan : ${loans}" class="loan-card fade-up">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="book-title fw-bold mb-1" th:text="${loan.book.title}">Book Title</h5>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-user"></i> <span th:text="${loan.book.author}">Author</span>
+                        <span class="mx-2">|</span>
+                        <i class="fas fa-tag"></i> <span th:text="${loan.book.category}">Category</span>
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-1">
+                        <small class="text-muted">Borrowed:</small>
+                        <strong th:text="${#temporals.format(loan.borrowDate, 'dd MMM yyyy')}">Date</strong>
+                    </div>
+                    <div>
+                        <small class="text-muted">Due:</small>
+                        <strong th:text="${#temporals.format(loan.dueDate, 'dd MMM yyyy')}">Date</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 text-md-end">
+                    <div class="mb-2">
+                        <span class="status-badge"
+                              th:classappend="${loan.returned ? 'status-returned' : (loan.overdue ? 'status-overdue' : 'status-active')}"
+                              th:text="${loan.returned ? 'Returned' : (loan.overdue ? 'Overdue' : 'Active')}">
+                            Active
+                        </span>
+                        <span th:if="${loan.fine > 0}" class="fine-warning ms-2">
+                            <i class="fas fa-coins"></i> Fine: $<span th:text="${loan.fine}">0</span>
+                        </span>
+                    </div>
+                    <!-- 🔒 Only librarians and admins can see the Return button -->
+                    <div sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
+                        <form th:if="${!loan.returned}" th:action="@{/loans/return/{id}(id=${loan.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn-return">
+                                <i class="fas fa-undo"></i> Return
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${loans == null or loans.isEmpty()}" class="empty-state fade-up">
+        <i class="fas fa-book-open"></i>
+        <h4 class="fw-bold">No Books Borrowed</h4>
+        <p class="text-muted">You haven't borrowed any books yet.</p>
+        <a href="/books" class="btn btn-gradient mt-3">
+            <i class="fas fa-search"></i> Browse Books
+        </a>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ============================================
+    // DARK MODE TOGGLE
+    // ============================================
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const btn = document.getElementById('darkModeToggle');
+        if (document.body.classList.contains('dark-mode')) {
+            btn.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            btn.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+    }
+
+    // ============================================
+    // SCROLL ANIMATIONS (Intersection Observer)
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const elements = document.querySelectorAll('.fade-up');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+        elements.forEach(el => observer.observe(el));
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(a => a.remove());
+        }, 5000);
+    });
+</script>
+</body>
+</html>

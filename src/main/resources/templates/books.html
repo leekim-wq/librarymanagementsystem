@@ -1,116 +1,472 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Books - Smart Library</title>
+    <title>Books – Smart Library</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        /* ---------- RESET & BASE ---------- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        body.dark-mode {
+            background: #121212;
+            color: #e0e0e0;
+        }
+        body.dark-mode .navbar-custom { background: #1e1e2f; border-bottom-color: #bb86fc; }
+        body.dark-mode .page-header { background: #1e1e2f; }
+        body.dark-mode .book-card { background: #1e1e2f; color: #e0e0e0; }
+        body.dark-mode .book-title { color: #fff; }
+        body.dark-mode .book-author { color: #aaa; }
+        body.dark-mode .badge-category { background: #2d2d44; color: #ccc; }
+        body.dark-mode .category-pill { background: #2d2d44; color: #ccc; }
+        body.dark-mode .category-pill.active { background: #667eea; color: #fff; }
+        body.dark-mode .search-box { background: #1e1e2f; border-color: #444; color: #fff; }
+        body.dark-mode .search-box::placeholder { color: #888; }
+        body.dark-mode .btn-outline-secondary { color: #aaa; border-color: #555; }
+        body.dark-mode .btn-outline-secondary:hover { background: #333; color: #fff; }
+        body.dark-mode .empty-state { color: #ccc; }
+
+        /* ---------- SCROLL ANIMATIONS ---------- */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ---------- NAVBAR (identical to home) ---------- */
         .navbar-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 12px 0;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+            border-bottom: 3px solid #e94560;
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+            transition: background 0.3s;
         }
-        .book-card {
-            border: none;
-            border-radius: 15px;
+        .navbar-custom .navbar-brand {
+            font-weight: 900;
+            font-size: 1.6rem;
+            color: #fff !important;
+            letter-spacing: -0.5px;
+        }
+        .navbar-custom .navbar-brand i { color: #e94560; margin-right: 10px; }
+        .navbar-custom .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 600;
             transition: all 0.3s;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 8px 18px;
+            border-radius: 25px;
+            position: relative;
         }
-        .book-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        .navbar-custom .nav-link:hover {
+            color: #fff !important;
+            background: rgba(233, 69, 96, 0.2);
+            transform: translateY(-2px);
         }
+        .navbar-custom .nav-link.active {
+            color: #fff !important;
+            background: #e94560;
+        }
+        .navbar-custom .dropdown-menu {
+            background: #1a1a2e;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            padding: 10px 0;
+        }
+        .navbar-custom .dropdown-item {
+            color: #ddd;
+            padding: 10px 24px;
+            transition: all 0.2s;
+            border-radius: 10px;
+            margin: 2px 8px;
+        }
+        .navbar-custom .dropdown-item:hover {
+            background: #e94560;
+            color: #fff;
+        }
+        .navbar-custom .dropdown-toggle::after { color: #e94560; }
+        .user-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 16px;
+            border-radius: 25px;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.15);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .user-badge i { color: #e94560; margin-right: 8px; }
+        .cart-badge {
+            background: #e94560;
+            color: #fff;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+        .dark-toggle {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            border-radius: 25px;
+            padding: 6px 14px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .dark-toggle:hover { background: rgba(255,255,255,0.2); }
+
+        /* ---------- PAGE HEADER with floating shapes ---------- */
+        .page-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            padding: 50px 0 40px;
+            margin-bottom: 30px;
+            border-radius: 0 0 40px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .page-header .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        .page-header .floating-shapes span {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(233,69,96,0.06);
+            animation: float 20s infinite ease-in-out;
+        }
+        .page-header .floating-shapes span:nth-child(1) { width: 250px; height: 250px; top: -60px; left: -60px; }
+        .page-header .floating-shapes span:nth-child(2) { width: 300px; height: 300px; bottom: -100px; right: -80px; animation-delay: -6s; background: rgba(102,126,234,0.06); }
+        .page-header .floating-shapes span:nth-child(3) { width: 150px; height: 150px; top: 30%; left: 70%; animation-delay: -12s; background: rgba(243,156,18,0.05); }
+        @keyframes float {
+            0% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(20px,-30px) scale(1.05); }
+            66% { transform: translate(-15px,20px) scale(0.95); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+        .page-header h2 {
+            font-weight: 900;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+            position: relative;
+            z-index: 1;
+        }
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ---------- SEARCH & FILTERS ---------- */
         .search-box {
             border-radius: 50px;
-            padding: 15px 25px;
+            padding: 14px 24px;
             border: 2px solid #e0e0e0;
             transition: all 0.3s;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(5px);
         }
         .search-box:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
+            background: #fff;
         }
-        .badge-available { background: #27ae60; color: white; padding: 5px 12px; border-radius: 20px; }
-        .badge-borrowed { background: #e74c3c; color: white; padding: 5px 12px; border-radius: 20px; }
         .btn-gradient {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
+            color: #fff;
+            padding: 10px 28px;
             border-radius: 50px;
-            color: white;
-            padding: 10px 25px;
+            font-weight: 600;
             transition: all 0.3s;
         }
-        .btn-gradient:hover { color: white; transform: scale(1.02); }
-        .btn-borrow {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            border: none;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 25px;
-            transition: all 0.3s;
-        }
-        .btn-borrow:hover { color: white; transform: scale(1.05); }
-        .btn-borrow:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .btn-gradient:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 25px rgba(102,126,234,0.4);
+            color: #fff;
         }
         .category-pill {
-            padding: 8px 20px;
+            padding: 8px 22px;
             border-radius: 25px;
-            background: #e9ecef;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(5px);
             color: #495057;
             text-decoration: none;
             transition: all 0.3s;
             display: inline-block;
-            margin: 3px;
+            margin: 4px 6px 4px 0;
+            font-weight: 500;
+            border: 1px solid rgba(0,0,0,0.05);
         }
         .category-pill:hover {
             background: #667eea;
-            color: white;
+            color: #fff;
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 8px 20px rgba(102,126,234,0.2);
         }
         .category-pill.active {
             background: #667eea;
-            color: white;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(102,126,234,0.3);
+        }
+
+        /* ---------- BOOK CARDS (glassmorphism) ---------- */
+        .book-card {
+            border: none;
+            border-radius: 20px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .book-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+        .book-card .card-body { padding: 20px; }
+        .book-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 2.8rem;
+        }
+        .book-author {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .book-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .badge-category {
+            background: rgba(0,0,0,0.05);
+            color: #495057;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge-available {
+            background: #27ae60;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge-borrowed {
+            background: #e94560;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .btn-cart {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            border: none;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .btn-cart:hover:not(:disabled) {
+            transform: scale(1.04);
+            box-shadow: 0 8px 20px rgba(39,174,96,0.3);
+            color: #fff;
+        }
+        .btn-cart:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-outline-primary-custom {
+            border: 2px solid #667eea;
+            color: #667eea;
+            background: transparent;
+            padding: 6px 16px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .btn-outline-primary-custom:hover {
+            background: #667eea;
+            color: #fff;
+        }
+
+        /* ---------- EMPTY STATE ---------- */
+        .empty-state i {
+            font-size: 4rem;
+            color: #6c757d;
+        }
+
+        /* ---------- DARK MODE OVERRIDES ---------- */
+        body.dark-mode .book-card {
+            background: rgba(30,30,47,0.85);
+            border-color: rgba(255,255,255,0.05);
+        }
+        body.dark-mode .book-title { color: #fff; }
+        body.dark-mode .book-author { color: #aaa; }
+        body.dark-mode .badge-category { background: #2d2d44; color: #ccc; }
+        body.dark-mode .category-pill { background: #2d2d44; color: #ccc; border-color: #444; }
+        body.dark-mode .category-pill.active { background: #667eea; color: #fff; border-color: #667eea; }
+        body.dark-mode .search-box { background: #1e1e2f; border-color: #444; color: #fff; }
+        body.dark-mode .search-box::placeholder { color: #888; }
+        body.dark-mode .btn-outline-secondary { color: #aaa; border-color: #555; }
+        body.dark-mode .btn-outline-secondary:hover { background: #333; color: #fff; }
+        body.dark-mode .empty-state { color: #ccc; }
+        body.dark-mode .empty-state i { color: #888; }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 992px) {
+            .page-header h2 { font-size: 2rem; }
+        }
+        @media (max-width: 768px) {
+            .navbar-custom .navbar-brand { font-size: 1.2rem; }
+            .page-header { padding: 30px 0; }
+            .page-header h2 { font-size: 1.6rem; }
+            .search-box { font-size: 0.9rem; padding: 12px 18px; }
+        }
+        @media (max-width: 576px) {
+            .category-pill { font-size: 0.8rem; padding: 6px 14px; }
         }
     </style>
 </head>
 <body>
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container">
-        <a class="navbar-brand" href="/">
-            <i class="fas fa-book-open"></i> Smart Library
-        </a>
+        <a class="navbar-brand" href="/"><i class="fas fa-book-open"></i> Smart Library</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a></li>
                 <li class="nav-item"><a class="nav-link active" href="/books"><i class="fas fa-book"></i> Books</a></li>
+
+                <!-- Cart Link -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/cart">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                        <span class="cart-badge" th:text="${cartCount}">0</span>
+                    </a>
+                </li>
+
+                <!-- Admin Dropdown -->
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-shield"></i> Admin
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/admin/users"><i class="fas fa-users"></i> Manage Users</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/books/add"><i class="fas fa-plus"></i> Add Book</a></li>
+                    </ul>
+                </li>
+
+                <!-- Librarian Dropdown -->
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-book-open"></i> Manage
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/books/add"><i class="fas fa-plus"></i> Add Book</a></li>
+                        <li><a class="dropdown-item" href="/books"><i class="fas fa-edit"></i> Edit Books</a></li>
+                    </ul>
+                </li>
+
+                <!-- My Loans -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/loans"><i class="fas fa-hand-holding-heart"></i> My Loans</a>
+                </li>
+
+                <!-- User badge -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <span class="user-badge">
+                        <i class="fas fa-user-circle"></i> <span sec:authentication="name">User</span>
+                    </span>
+                </li>
+
+                <!-- Dark mode toggle -->
+                <li class="nav-item">
+                    <button class="dark-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </li>
+
+                <!-- Auth -->
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
+                </li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" href="/register"><i class="fas fa-user-plus"></i> Register</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
             </ul>
         </div>
     </div>
 </nav>
 
-<!-- Content -->
-<div class="container mt-4">
-    <!-- Alerts -->
-    <div id="alertContainer"></div>
-
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h2><i class="fas fa-book text-primary"></i> Book Collection</h2>
-            <p class="text-muted">Browse our collection of <strong th:text="${books.size()}">0</strong> books</p>
-        </div>
+<!-- ===== PAGE HEADER with floating shapes ===== -->
+<div class="page-header">
+    <div class="floating-shapes">
+        <span></span>
+        <span></span>
+        <span></span>
     </div>
+    <div class="container">
+        <h2 class="fw-bold mb-0"><i class="fas fa-book"></i> Book Collection</h2>
+        <p class="mb-0 opacity-75">Browse our extensive library catalog</p>
+    </div>
+</div>
 
-    <!-- Search Bar -->
-    <div class="row mb-4">
+<!-- ===== MAIN CONTENT ===== -->
+<div class="container">
+
+    <!-- Search & Filter -->
+    <div class="row g-3 mb-4">
         <div class="col-md-8 mx-auto">
             <form action="/books" method="get" class="d-flex">
                 <input type="text" name="search" class="form-control search-box"
@@ -126,9 +482,11 @@
         </div>
     </div>
 
-    <!-- Category Filters -->
-    <div class="mb-4">
-        <a href="/books" class="category-pill" th:classappend="${selectedCategory == null ? 'active' : ''}">All</a>
+    <!-- Category pills -->
+    <div class="mb-4 fade-up">
+        <a href="/books" class="category-pill" th:classappend="${selectedCategory == null ? 'active' : ''}">
+            <i class="fas fa-th-list"></i> All
+        </a>
         <a th:each="cat : ${categories}"
            th:href="'/books?category=' + ${cat}"
            class="category-pill"
@@ -136,89 +494,128 @@
            th:text="${cat}">Category</a>
     </div>
 
-    <!-- Books Grid -->
-    <div class="row">
-        <div th:if="${books.empty}" class="col-12 text-center py-5">
-            <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
-            <h4>No books found</h4>
-            <p class="text-muted">Try adjusting your search or browse all books.</p>
-            <a href="/books" class="btn btn-gradient">Browse All Books</a>
-        </div>
+    <!-- Alert messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle"></i> <span th:text="${success}">Success</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 
-        <div th:each="book : ${books}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <div class="card book-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${book.title}">Title</h5>
-                    <p class="card-text text-muted">
-                        <i class="fas fa-user"></i> <span th:text="${book.author}">Author</span>
-                    </p>
-                    <p>
-                        <span class="badge bg-info" th:text="${book.category}">Category</span>
+    <!-- Books Grid -->
+    <div class="row" th:if="${not #lists.isEmpty(books)}">
+        <div th:each="book : ${books}" class="col-lg-3 col-md-4 col-sm-6 mb-4 fade-up">
+            <div class="book-card">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="book-title" th:text="${book.title}">Title</h5>
+                    <p class="book-author"><i class="fas fa-user"></i> <span th:text="${book.author}">Author</span></p>
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        <span class="badge-category" th:text="${book.category}">Category</span>
                         <span class="badge" th:classappend="${book.availableQuantity > 0 ? 'badge-available' : 'badge-borrowed'}">
-                                <span th:if="${book.availableQuantity > 0}">
-                                    <i class="fas fa-check-circle"></i> Available
-                                </span>
-                                <span th:unless="${book.availableQuantity > 0}">
-                                    <i class="fas fa-times-circle"></i> Borrowed
-                                </span>
-                            </span>
-                    </p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            <i class="fas fa-copy"></i> <span th:text="${book.availableQuantity}">0</span> copies
-                        </small>
-                        <span class="text-warning">
-                                <i class="fas fa-star"></i> <span th:text="${book.rating}">0.0</span>
-                            </span>
+                            <span th:if="${book.availableQuantity > 0}"><i class="fas fa-check-circle"></i> Available</span>
+                            <span th:unless="${book.availableQuantity > 0}"><i class="fas fa-times-circle"></i> Borrowed</span>
+                        </span>
                     </div>
-                </div>
-                <div class="card-footer bg-transparent">
-                    <div class="d-grid gap-2">
-                        <!-- View Details Button -->
-                        <a th:href="'/books/' + ${book.id}" class="btn btn-outline-primary">
+                    <div class="book-meta">
+                        <small class="text-muted"><i class="fas fa-copy"></i> <span th:text="${book.availableQuantity}">0</span> copies</small>
+                        <span class="text-warning"><i class="fas fa-star"></i> <span th:text="${book.rating}">0.0</span></span>
+                    </div>
+                    <div class="mt-3 d-grid gap-2">
+                        <a th:href="'/books/' + ${book.id}" class="btn btn-outline-primary-custom">
                             <i class="fas fa-eye"></i> Details
                         </a>
-                        <!-- Borrow Button - WORKING -->
-                        <form th:action="'/books/borrow/' + ${book.id}" method="post"
-                              onsubmit="return confirm('Are you sure you want to borrow this book?')">
-                            <button type="submit" class="btn btn-borrow w-100"
-                                    th:disabled="${book.availableQuantity <= 0}">
-                                <i class="fas fa-hand-holding-heart"></i>
-                                <span th:if="${book.availableQuantity > 0}">Borrow Now</span>
-                                <span th:unless="${book.availableQuantity > 0}">Not Available</span>
-                            </button>
-                        </form>
+                        <!-- Add to Cart for authenticated members -->
+                        <div sec:authorize="isAuthenticated()">
+                            <div sec:authorize="!hasAnyRole('LIBRARIAN', 'ADMIN')">
+                                <form th:action="'/cart/add/' + ${book.id}" method="post">
+                                    <button type="submit" class="btn btn-cart"
+                                            th:disabled="${book.availableQuantity <= 0}">
+                                        <i class="fas fa-cart-plus"></i>
+                                        <span th:if="${book.availableQuantity > 0}">Add to Cart</span>
+                                        <span th:unless="${book.availableQuantity > 0}">Unavailable</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Prompt for guests -->
+                        <div sec:authorize="!isAuthenticated()">
+                            <a href="/login" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-sign-in-alt"></i> Login to Borrow
+                            </a>
+                        </div>
+                        <!-- Edit/Delete for Librarian/Admin -->
+                        <div sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
+                            <div class="btn-group w-100">
+                                <a th:href="'/books/edit/' + ${book.id}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <form th:action="'/books/delete/' + ${book.id}" method="post" style="flex:1;">
+                                    <button type="submit" class="btn btn-danger btn-sm w-100"
+                                            onclick="return confirm('Delete this book?')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(books)}" class="empty-state text-center py-5 fade-up">
+        <i class="fas fa-book-open"></i>
+        <h4 class="mt-3">No books found</h4>
+        <p class="text-muted">Try adjusting your search or browse all books.</p>
+        <a href="/books" class="btn btn-gradient">Browse All Books</a>
+        <div sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')" class="mt-2">
+            <a href="/books/add" class="btn btn-outline-primary">Add a Book</a>
+        </div>
+    </div>
 </div>
 
+<!-- ===== SCRIPTS ===== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Show alert function
-    function showAlert(message, type) {
-        const container = document.getElementById('alertContainer');
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.role = 'alert';
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        container.appendChild(alertDiv);
-        setTimeout(() => alertDiv.remove(), 5000);
+    // ---------- DARK MODE TOGGLE ----------
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const btn = document.getElementById('darkModeToggle');
+        if (document.body.classList.contains('dark-mode')) {
+            btn.innerHTML = '<i class="fas fa-sun"></i>';
+            localStorage.setItem('darkMode', 'enabled');
+        } else {
+            btn.innerHTML = '<i class="fas fa-moon"></i>';
+            localStorage.setItem('darkMode', 'disabled');
+        }
     }
 
-    // Check for flash messages
+    // Load dark mode preference
     document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const success = urlParams.get('success');
-        const error = urlParams.get('error');
-        if (success) showAlert(success, 'success');
-        if (error) showAlert(error, 'danger');
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+        }
+
+        // ---------- SCROLL ANIMATIONS (Intersection Observer) ----------
+        const elements = document.querySelectorAll('.fade-up');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+        elements.forEach(el => observer.observe(el));
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(a => a.remove());
+        }, 5000);
     });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -10,27 +10,19 @@ import java.util.List;
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
 
-    /**
-     * Find books by title or author (case insensitive, partial match)
-     */
-    List<Book> findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(
-            String title, String author);
-
-    /**
-     * Find books by category
-     */
+    List<Book> findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(String title, String author);
     List<Book> findByCategory(String category);
 
-    /**
-     * Find books with available quantity > 0
-     */
     @Query("SELECT b FROM Book b WHERE b.availableQuantity > 0")
     List<Book> findAvailableBooks();
 
-    /**
-     * Find most borrowed books (sorted by total borrows descending)
-     * FIXES: findMostBorrowedBooks() error
-     */
     @Query("SELECT b FROM Book b ORDER BY b.totalBorrows DESC")
     List<Book> findMostBorrowedBooks();
+
+    // ===== NEW: Sum queries for copy counts =====
+    @Query("SELECT COALESCE(SUM(b.quantity), 0) FROM Book b")
+    Long sumTotalCopies();
+
+    @Query("SELECT COALESCE(SUM(b.availableQuantity), 0) FROM Book b")
+    Long sumAvailableCopies();
 }

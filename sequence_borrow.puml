@@ -1,27 +1,27 @@
 @startuml
-'https://plantuml.com/class-diagram
+actor Member
+participant "CartController" as CC
+participant "CartService" as CS
+participant "BookService" as BS
+participant "LoanRepository" as LR
+participant "BookRepository" as BR
 
-abstract class AbstractList
-abstract AbstractCollection
-interface List
-interface Collection
+Member -> CC: POST /cart/add/{bookId}
+activate CC
+CC -> CS: addToCart(book)
+CS -> CS: store in session
+CS --> CC: OK
+CC --> Member: redirect /books/{id}
+deactivate CC
 
-List <|-- AbstractList
-Collection <|-- AbstractCollection
-
-Collection <|- List
-AbstractCollection <|- AbstractList
-AbstractList <|-- ArrayList
-
-class ArrayList {
-Object[] elementData
-size()
-}
-
-enum TimeUnit {
-DAYS
-HOURS
-MINUTES
-}
-
+Member -> CC: POST /cart/checkout
+activate CC
+CC -> BS: borrowBook(bookId, member)
+activate BS
+BS -> LR: save(loan)
+BS -> BR: update availableQuantity
+BS --> CC: true/false
+deactivate BS
+CC --> Member: redirect /loans
+deactivate CC
 @enduml

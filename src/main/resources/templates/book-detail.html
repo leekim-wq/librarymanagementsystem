@@ -1,216 +1,480 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${book.title} + ' - Smart Library'">Book Details</title>
+    <title th:text="${book.title} + ' – Smart Library'">Book Details</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        /* ---------- RESET & BASE ---------- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
+            font-family: 'Inter', sans-serif;
             background: #f0f2f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+            overflow-x: hidden;
         }
+        body.dark-mode {
+            background: #121212;
+            color: #e0e0e0;
+        }
+        body.dark-mode .navbar-custom { background: #1e1e2f; border-bottom-color: #bb86fc; }
+        body.dark-mode .detail-card { background: rgba(30, 30, 47, 0.9); color: #e0e0e0; }
+        body.dark-mode .info-label { color: #ccc; }
+        body.dark-mode .stat-box { background: #2a2a3f; }
+        body.dark-mode .stat-box:hover { background: #3a3a5f; }
+        body.dark-mode .stat-number { color: #bb86fc; }
+        body.dark-mode .text-muted { color: #aaa !important; }
+        body.dark-mode .btn-outline-secondary { color: #ccc; border-color: #555; }
+        body.dark-mode .btn-outline-secondary:hover { background: #333; color: #fff; }
+
+        /* ---------- NAVBAR (same as home) ---------- */
         .navbar-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 12px 0;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+            border-bottom: 3px solid #e94560;
+            transition: background 0.3s;
+            position: sticky;
+            top: 0;
+            z-index: 1050;
         }
-        .book-detail-card {
-            background: white;
-            border-radius: 20px;
+        .navbar-custom .navbar-brand {
+            font-weight: 900;
+            font-size: 1.6rem;
+            color: #fff !important;
+            letter-spacing: -0.5px;
+        }
+        .navbar-custom .navbar-brand i { color: #e94560; margin-right: 10px; }
+        .navbar-custom .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 8px 18px;
+            border-radius: 25px;
+        }
+        .navbar-custom .nav-link:hover {
+            color: #fff !important;
+            background: rgba(233, 69, 96, 0.2);
+            transform: translateY(-2px);
+        }
+        .navbar-custom .nav-link.active {
+            color: #fff !important;
+            background: #e94560;
+        }
+        .navbar-custom .dropdown-menu {
+            background: #1a1a2e;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            padding: 10px 0;
+        }
+        .navbar-custom .dropdown-item {
+            color: #ddd;
+            padding: 10px 24px;
+            transition: all 0.2s;
+            border-radius: 10px;
+            margin: 2px 8px;
+        }
+        .navbar-custom .dropdown-item:hover {
+            background: #e94560;
+            color: #fff;
+        }
+        .navbar-custom .dropdown-toggle::after { color: #e94560; }
+        .user-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 16px;
+            border-radius: 25px;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.15);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .user-badge i { color: #e94560; margin-right: 8px; }
+        .cart-badge {
+            background: #e94560;
+            color: #fff;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+        .dark-toggle {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            border-radius: 25px;
+            padding: 6px 14px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .dark-toggle:hover { background: rgba(255,255,255,0.2); }
+
+        /* ---------- BACKGROUND SHAPES ---------- */
+        .bg-shapes {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-shapes span {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.05;
+            animation: floatShape 25s infinite ease-in-out;
+        }
+        .bg-shapes span:nth-child(1) {
+            width: 300px; height: 300px;
+            background: #667eea;
+            top: -80px; left: -80px;
+            animation-delay: 0s;
+        }
+        .bg-shapes span:nth-child(2) {
+            width: 400px; height: 400px;
+            background: #e94560;
+            bottom: -120px; right: -120px;
+            animation-delay: -7s;
+        }
+        .bg-shapes span:nth-child(3) {
+            width: 200px; height: 200px;
+            background: #f39c12;
+            top: 40%; left: 60%;
+            animation-delay: -14s;
+        }
+        @keyframes floatShape {
+            0% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(30px,-40px) scale(1.1); }
+            66% { transform: translate(-20px,20px) scale(0.9); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+
+        /* ---------- DETAIL CARD ---------- */
+        .detail-card {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
             padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            margin-top: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            margin: 30px 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255,255,255,0.2);
         }
+        .detail-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.12);
+        }
+
         .book-cover {
             width: 100%;
-            max-width: 300px;
-            height: 400px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
+            max-width: 280px;
+            height: 380px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 5rem;
+            color: #fff;
+            font-size: 6rem;
             margin: 0 auto;
+            box-shadow: 0 15px 40px rgba(102,126,234,0.3);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
         }
-        .badge-available {
-            background: #27ae60;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-size: 1rem;
+        .book-cover:hover {
+            transform: scale(1.03) rotate(-2deg);
+            box-shadow: 0 25px 60px rgba(102,126,234,0.4);
         }
-        .badge-borrowed {
-            background: #e74c3c;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-size: 1rem;
-        }
-        .btn-borrow {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            border: none;
-            color: white;
-            padding: 12px 40px;
+        .book-cover.green { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .book-cover.orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .book-cover.pink { background: linear-gradient(135deg, #e94560, #c0392b); }
+        .book-cover.purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+
+        .badge-status {
+            padding: 10px 24px;
             border-radius: 50px;
-            font-size: 1.1rem;
-            transition: all 0.3s;
+            font-size: 1rem;
+            font-weight: 700;
+            display: inline-block;
+            letter-spacing: 0.5px;
         }
-        .btn-borrow:hover {
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
-        }
-        .btn-borrow:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .btn-return {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            border: none;
-            color: white;
-            padding: 12px 40px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            transition: all 0.3s;
-        }
-        .btn-return:hover {
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(243, 156, 18, 0.4);
-        }
+        .badge-available { background: #27ae60; color: #fff; }
+        .badge-borrowed { background: #e94560; color: #fff; }
+
         .info-label {
             font-weight: 600;
             color: #2d3748;
-            min-width: 120px;
+            min-width: 130px;
             display: inline-block;
         }
         .stat-box {
-            text-align: center;
-            padding: 15px;
             background: #f8f9fa;
-            border-radius: 10px;
+            border-radius: 16px;
+            padding: 18px 12px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: default;
+        }
+        .stat-box:hover {
+            background: #e9ecef;
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
         }
         .stat-number {
-            font-size: 1.8rem;
-            font-weight: bold;
+            font-size: 2rem;
+            font-weight: 900;
             color: #667eea;
+            letter-spacing: -1px;
         }
-        .alert {
-            border-radius: 15px;
+
+        .btn-cart-detail {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border: none;
+            color: #fff;
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 15px rgba(39,174,96,0.3);
+        }
+        .btn-cart-detail:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(39,174,96,0.5);
+            color: #fff;
+        }
+        .btn-cart-detail:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-edit {
+            background: #f39c12;
+            border: none;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-edit:hover { background: #e67e22; color: #fff; transform: scale(1.02); }
+        .btn-delete {
+            background: #e94560;
+            border: none;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-delete:hover { background: #c0392b; color: #fff; transform: scale(1.02); }
+
+        /* ---------- ANIMATIONS ---------- */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 768px) {
+            .detail-card { padding: 20px; }
+            .book-cover { height: 250px; font-size: 4rem; max-width: 200px; }
+            .stat-number { font-size: 1.5rem; }
+            .navbar-custom .navbar-brand { font-size: 1.2rem; }
+        }
+        @media (max-width: 576px) {
+            .detail-card { padding: 15px; }
+            .book-cover { height: 200px; font-size: 3rem; }
         }
     </style>
 </head>
 <body>
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+
+<!-- ===== BACKGROUND SHAPES ===== -->
+<div class="bg-shapes">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container">
-        <a class="navbar-brand" href="/">
-            <i class="fas fa-book-open"></i> Smart Library
-        </a>
+        <a class="navbar-brand" href="/"><i class="fas fa-book-open"></i> Smart Library</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a></li>
                 <li class="nav-item"><a class="nav-link active" href="/books"><i class="fas fa-book"></i> Books</a></li>
+                <!-- Cart -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/cart">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                        <span class="cart-badge" th:text="${cartCount}">0</span>
+                    </a>
+                </li>
+                <!-- Admin Dropdown -->
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-shield"></i> Admin
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/admin/users"><i class="fas fa-users"></i> Users</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/books/add"><i class="fas fa-plus"></i> Add Book</a></li>
+                    </ul>
+                </li>
+                <!-- Librarian Dropdown -->
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-book-open"></i> Manage
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/books/add"><i class="fas fa-plus"></i> Add Book</a></li>
+                    </ul>
+                </li>
+                <!-- My Loans -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/loans"><i class="fas fa-hand-holding-heart"></i> My Loans</a>
+                </li>
+                <!-- User badge -->
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <span class="user-badge">
+                        <i class="fas fa-user-circle"></i> <span sec:authentication="name">User</span>
+                    </span>
+                </li>
+                <!-- Dark mode toggle -->
+                <li class="nav-item">
+                    <button class="dark-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </li>
+                <!-- Auth -->
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
             </ul>
         </div>
     </div>
 </nav>
 
-<!-- Content -->
+<!-- ===== DETAIL CONTENT ===== -->
 <div class="container">
-    <div class="book-detail-card">
-        <!-- Alerts -->
-        <div id="alertContainer">
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle"></i> <span th:text="${success}">Success</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Error</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        </div>
-
-        <!-- Back Button -->
-        <a href="/books" class="btn btn-outline-secondary mb-4">
+    <!-- Back button -->
+    <div class="mt-3 fade-up">
+        <a href="/books" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Back to Books
         </a>
+    </div>
 
-        <div class="row">
-            <!-- Book Cover -->
+    <div class="detail-card fade-up">
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}">Success</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Error</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row g-4">
+            <!-- Cover -->
             <div class="col-md-4 text-center">
-                <div class="book-cover">
-                    <i class="fas fa-book"></i>
+                <div class="book-cover"
+                     th:classappend="${book.category == 'Programming' ? 'green' :
+                                     book.category == 'Web Development' ? 'orange' :
+                                     book.category == 'Data Science' ? 'pink' :
+                                     book.category == 'Fiction' ? 'purple' : ''}">
+                    <i class="fas fa-book-open"></i>
                 </div>
                 <div class="mt-3">
-                        <span class="badge" th:classappend="${book.availableQuantity > 0 ? 'badge-available' : 'badge-borrowed'}">
-                            <i th:if="${book.availableQuantity > 0}" class="fas fa-check-circle"></i>
-                            <i th:unless="${book.availableQuantity > 0}" class="fas fa-times-circle"></i>
-                            <span th:if="${book.availableQuantity > 0}">Available</span>
-                            <span th:unless="${book.availableQuantity > 0}">Borrowed</span>
-                        </span>
+                    <span class="badge-status" th:classappend="${book.availableQuantity > 0 ? 'badge-available' : 'badge-borrowed'}">
+                        <i th:if="${book.availableQuantity > 0}" class="fas fa-check-circle"></i>
+                        <i th:unless="${book.availableQuantity > 0}" class="fas fa-times-circle"></i>
+                        <span th:if="${book.availableQuantity > 0}"> Available</span>
+                        <span th:unless="${book.availableQuantity > 0}"> Borrowed</span>
+                    </span>
                 </div>
             </div>
 
-            <!-- Book Info -->
+            <!-- Info -->
             <div class="col-md-8">
                 <h1 class="display-5 fw-bold" th:text="${book.title}">Book Title</h1>
-                <h4 class="text-muted">
-                    <i class="fas fa-user"></i> by <span th:text="${book.author}">Author</span>
-                </h4>
+                <h4 class="text-muted"><i class="fas fa-user"></i> by <span th:text="${book.author}">Author</span></h4>
 
                 <div class="mt-4">
-                    <div class="mb-2">
-                        <span class="info-label"><i class="fas fa-tag"></i> Category:</span>
+                    <div class="mb-2"><span class="info-label"><i class="fas fa-tag"></i> Category:</span>
                         <span class="badge bg-info" th:text="${book.category}">Category</span>
                     </div>
-                    <div class="mb-2">
-                        <span class="info-label"><i class="fas fa-copy"></i> Quantity:</span>
-                        <span th:text="${book.quantity}">0</span> total,
-                        <span th:text="${book.availableQuantity}">0</span> available
+                    <div class="mb-2"><span class="info-label"><i class="fas fa-copy"></i> Quantity:</span>
+                        <span th:text="${book.quantity}">0</span> total, <span th:text="${book.availableQuantity}">0</span> available
                     </div>
-                    <div class="mb-2">
-                        <span class="info-label"><i class="fas fa-star"></i> Rating:</span>
-                        <span class="text-warning">
-                                <i class="fas fa-star"></i> <span th:text="${book.rating}">0.0</span>
-                            </span>
+                    <div class="mb-2"><span class="info-label"><i class="fas fa-star"></i> Rating:</span>
+                        <span class="text-warning"><i class="fas fa-star"></i> <span th:text="${book.rating}">0.0</span></span>
                     </div>
-                    <div class="mb-2">
-                        <span class="info-label"><i class="fas fa-book-open"></i> Total Borrows:</span>
+                    <div class="mb-2"><span class="info-label"><i class="fas fa-book-open"></i> Total Borrows:</span>
                         <span th:text="${book.totalBorrows}">0</span> times
                     </div>
                 </div>
 
-                <div class="mt-4">
-                    <p class="text-muted" th:text="${book.description}">Book description goes here.</p>
+                <div class="mt-3">
+                    <p class="text-muted" th:text="${book.description}">Description goes here.</p>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="mt-4">
-                    <!-- Borrow Form -->
-                    <form th:action="'/books/borrow/' + ${book.id}" method="post"
-                          class="d-inline">
-                        <button type="submit" class="btn btn-borrow"
-                                th:disabled="${book.availableQuantity <= 0}">
-                            <i class="fas fa-hand-holding-heart"></i>
-                            <span th:if="${book.availableQuantity > 0}">Borrow This Book</span>
-                            <span th:unless="${book.availableQuantity > 0}">Currently Unavailable</span>
-                        </button>
-                    </form>
-
-                    <a href="/books" class="btn btn-outline-secondary ms-2">
+                <!-- Action buttons -->
+                <div class="mt-4 d-flex flex-wrap gap-2">
+                    <!-- Add to Cart (authenticated non-admin/librarian) -->
+                    <div sec:authorize="isAuthenticated()">
+                        <div sec:authorize="!hasAnyRole('LIBRARIAN', 'ADMIN')">
+                            <form th:action="'/cart/add/' + ${book.id}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-cart-detail"
+                                        th:disabled="${book.availableQuantity <= 0}">
+                                    <i class="fas fa-cart-plus"></i>
+                                    <span th:if="${book.availableQuantity > 0}">Add to Cart</span>
+                                    <span th:unless="${book.availableQuantity > 0}">Unavailable</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div sec:authorize="!isAuthenticated()">
+                        <a href="/login" class="btn btn-primary-gradient">Login to Borrow</a>
+                    </div>
+                    <!-- Edit/Delete for librarian/admin -->
+                    <div sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
+                        <a th:href="'/books/edit/' + ${book.id}" class="btn btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form th:action="'/books/delete/' + ${book.id}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-delete" onclick="return confirm('Delete this book?')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                    <a href="/books" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Back
                     </a>
                 </div>
 
                 <!-- Stats -->
-                <div class="row mt-4">
+                <div class="row mt-4 g-2">
                     <div class="col-4">
                         <div class="stat-box">
                             <div class="stat-number" th:text="${book.totalBorrows}">0</div>
@@ -220,7 +484,7 @@
                     <div class="col-4">
                         <div class="stat-box">
                             <div class="stat-number" th:text="${book.availableQuantity}">0</div>
-                            <small class="text-muted">Available Copies</small>
+                            <small class="text-muted">Available</small>
                         </div>
                     </div>
                     <div class="col-4">
@@ -235,6 +499,39 @@
     </div>
 </div>
 
+<!-- ============================================ -->
+<!-- SCRIPTS -->
+<!-- ============================================ -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ===== DARK MODE TOGGLE =====
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const btn = document.getElementById('darkModeToggle');
+        if (document.body.classList.contains('dark-mode')) {
+            btn.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            btn.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+    }
+
+    // ===== SCROLL ANIMATIONS (fade-up) =====
+    document.addEventListener('DOMContentLoaded', function() {
+        const elements = document.querySelectorAll('.fade-up');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+        elements.forEach(el => observer.observe(el));
+
+        // Auto-hide alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(a => a.remove());
+        }, 5000);
+    });
+</script>
 </body>
 </html>

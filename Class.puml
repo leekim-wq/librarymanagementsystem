@@ -1,27 +1,55 @@
 @startuml
-'https://plantuml.com/class-diagram
-
-abstract class AbstractList
-abstract AbstractCollection
-interface List
-interface Collection
-
-List <|-- AbstractList
-Collection <|-- AbstractCollection
-
-Collection <|- List
-AbstractCollection <|- AbstractList
-AbstractList <|-- ArrayList
-
-class ArrayList {
-Object[] elementData
-size()
+class Member {
+  - Long id
+  - String username
+  - String email
+  - String password
+  - String name
+  - String phone
+  - String address
+  - LocalDate membershipDate
+  - String membershipType
+  - boolean active
+  - double totalFines
+  - int borrowingLimit
+  - String role
+  + getAuthorities()
+  + isAccountNonExpired()
+  + isAccountNonLocked()
+  + isCredentialsNonExpired()
+  + isEnabled()
+  + canBorrow()
 }
 
-enum TimeUnit {
-DAYS
-HOURS
-MINUTES
+class Book {
+  - Long id
+  - String title
+  - String author
+  - String category
+  - String description
+  - int quantity
+  - int availableQuantity
+  - double rating
+  - int totalBorrows
+  + isAvailable()
 }
 
+class Loan {
+  - Long id
+  - LocalDate borrowDate
+  - LocalDate dueDate
+  - LocalDate returnDate
+  - boolean returned
+  - double fine
+  + isOverdue()
+  + calculateFine()
+}
+
+class CartItem {
+  - Book book
+}
+
+Member "1" -- "0..*" Loan
+Book "1" -- "0..*" Loan
+CartItem --> Book
 @enduml

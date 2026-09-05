@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class MemberService {
 
     @Autowired
@@ -27,11 +28,12 @@ public class MemberService {
         return memberRepository.findByEmail(email);
     }
 
-    @Transactional
+    // NEW: Find member by username
+    public Optional<Member> getMemberByUsername(String username) {
+        return memberRepository.findByUsername(username);
+    }
+
     public Member saveMember(Member member) {
-        if (member.getMembershipDate() == null) {
-            member.setMembershipDate(java.time.LocalDate.now());
-        }
         return memberRepository.save(member);
     }
 
@@ -43,11 +45,8 @@ public class MemberService {
         return memberRepository.existsByEmail(email);
     }
 
-    @Transactional
-    public Member updateMemberFines(Long memberId, double additionalFine) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new RuntimeException("Member not found"));
-        member.setTotalFines(member.getTotalFines() + additionalFine);
-        return memberRepository.save(member);
+    // NEW: Check if username already exists
+    public boolean usernameExists(String username) {
+        return memberRepository.findByUsername(username).isPresent();
     }
 }
