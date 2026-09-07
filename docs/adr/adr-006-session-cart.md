@@ -29,4 +29,4 @@ Alternatives Considered:
 
 Cookie-based storage – limited size, not secure for sensitive data.
 
-Database-backed cart – introduces unnecessary persistence overhead.
+Database-backed cart – introduces unnecessary  persistence overhead.
