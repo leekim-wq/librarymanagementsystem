@@ -8,12 +8,11 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestConfig.class)          // <-- ADD THIS
+@Import(TestConfig.class)   // <-- add this
 class LibraryManagementApplicationTests {
 
     @Test
     void contextLoads() {
-        // This test verifies that the application context loads successfully.
-        // Data seeding is disabled, so no Member will be inserted without a username.
+        // Verifies the context loads successfully.
     }
 }

@@ -1,23 +1,22 @@
 package com.library.config;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
-@TestConfiguration
+@Configuration
+@Profile("test")
 public class TestConfig {
 
     /**
-     * Overrides any existing CommandLineRunner beans during tests.
-     * This prevents any data seeding from running when the test context loads.
+     * Override any CommandLineRunner that seeds data.
+     * This prevents the username null error during tests.
      */
     @Bean
-    @Primary
     public CommandLineRunner noOpCommandLineRunner() {
         return args -> {
-            // Do nothing – this replaces any DataLoader / CommandLineRunner
-            System.out.println("🧪 Test mode: Data seeding disabled.");
+            // Do nothing – this overrides the production CommandLineRunner
         };
     }
 }
