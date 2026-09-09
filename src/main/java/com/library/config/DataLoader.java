@@ -33,6 +33,7 @@ public class DataLoader implements CommandLineRunner {
         if (!memberRepository.existsByEmail("admin@library.com")) {
             Member admin = new Member();
             admin.setEmail("admin@library.com");
+            admin.setUsername("admin"); // ✅ ADDED: Set username
             admin.setName("System Administrator");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRole("ADMIN");
@@ -45,6 +46,7 @@ public class DataLoader implements CommandLineRunner {
         if (!memberRepository.existsByEmail("librarian@library.com")) {
             Member librarian = new Member();
             librarian.setEmail("librarian@library.com");
+            librarian.setUsername("librarian"); // ✅ ADDED: Set username
             librarian.setName("Head Librarian");
             librarian.setPassword(passwordEncoder.encode("lib123"));
             librarian.setRole("LIBRARIAN");
@@ -57,6 +59,7 @@ public class DataLoader implements CommandLineRunner {
         if (!memberRepository.existsByEmail("member@library.com")) {
             Member member = new Member();
             member.setEmail("member@library.com");
+            member.setUsername("member"); // ✅ ADDED: Set username
             member.setName("Regular Member");
             member.setPassword(passwordEncoder.encode("member123"));
             member.setRole("MEMBER");
@@ -69,8 +72,31 @@ public class DataLoader implements CommandLineRunner {
         // Load books if empty
         if (bookRepository.count() == 0) {
             System.out.println("📚 Loading books...");
-            // Your book loading code here
-            System.out.println("✅ Books loaded successfully!");
+
+            // ✅ ADDED: Sample books for testing
+            List<Book> books = Arrays.asList(
+                    createBook("The Great Gatsby", "F. Scott Fitzgerald", "Classic", 5),
+                    createBook("To Kill a Mockingbird", "Harper Lee", "Classic", 3),
+                    createBook("1984", "George Orwell", "Dystopian", 4),
+                    createBook("Pride and Prejudice", "Jane Austen", "Romance", 3),
+                    createBook("The Catcher in the Rye", "J.D. Salinger", "Classic", 2)
+            );
+
+            bookRepository.saveAll(books);
+            System.out.println("✅ " + books.size() + " books loaded successfully!");
         }
+    }
+
+    // Helper method to create books
+    private Book createBook(String title, String author, String category, int quantity) {
+        Book book = new Book();
+        book.setTitle(title);
+        book.setAuthor(author);
+        book.setCategory(category);
+        book.setQuantity(quantity);
+        book.setAvailableQuantity(quantity);
+        book.setTotalBorrows(0);
+        book.setRating(0.0);
+        return book;
     }
 }
