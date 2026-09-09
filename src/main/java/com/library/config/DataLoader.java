@@ -4,6 +4,7 @@ import com.library.model.Book;
 import com.library.model.Member;
 import com.library.repository.BookRepository;
 import com.library.repository.MemberRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 @Component
 public class DataLoader implements CommandLineRunner {
 
@@ -28,66 +30,105 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     @Transactional
-    public void run(String... args) throws Exception {
-        // Create default users if they don't exist
-        if (!memberRepository.existsByEmail("admin@library.com")) {
+    public void run(String... args) {
+        try {
+            loadMembers();
+            loadBooks();
+        } catch (Exception e) {
+            log.error("Error loading data: {}", e.getMessage());
+            // Don't throw - allow application to start
+        }
+    }
+
+    private void loadMembers() {
+        try {
+            if (memberRepository.count() > 0) {
+                log.info("✅ Members already exist, skipping creation");
+                return;
+            }
+
+            log.info("📚 Creating default members...");
+
+            // Admin
             Member admin = new Member();
             admin.setEmail("admin@library.com");
-            admin.setUsername("admin"); // ✅ ADDED: Set username
+            admin.setUsername("admin");
             admin.setName("System Administrator");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRole("ADMIN");
             admin.setActive(true);
             admin.setMembershipDate(LocalDate.now());
+            admin.setMembershipType("Premium");
+            admin.setBorrowingLimit(10);
+            admin.setTotalFines(0.0);
             memberRepository.save(admin);
-            System.out.println("✅ Admin user created!");
-        }
+            log.info("✅ Admin user created!");
 
-        if (!memberRepository.existsByEmail("librarian@library.com")) {
+            // Librarian
             Member librarian = new Member();
             librarian.setEmail("librarian@library.com");
-            librarian.setUsername("librarian"); // ✅ ADDED: Set username
+            librarian.setUsername("librarian");
             librarian.setName("Head Librarian");
             librarian.setPassword(passwordEncoder.encode("lib123"));
             librarian.setRole("LIBRARIAN");
             librarian.setActive(true);
             librarian.setMembershipDate(LocalDate.now());
+            librarian.setMembershipType("Premium");
+            librarian.setBorrowingLimit(15);
+            librarian.setTotalFines(0.0);
             memberRepository.save(librarian);
-            System.out.println("✅ Librarian user created!");
-        }
+            log.info("✅ Librarian user created!");
 
-        if (!memberRepository.existsByEmail("member@library.com")) {
+            // Regular Member
             Member member = new Member();
             member.setEmail("member@library.com");
-            member.setUsername("member"); // ✅ ADDED: Set username
+            member.setUsername("member");
             member.setName("Regular Member");
             member.setPassword(passwordEncoder.encode("member123"));
             member.setRole("MEMBER");
             member.setActive(true);
             member.setMembershipDate(LocalDate.now());
+            member.setMembershipType("Standard");
+            member.setBorrowingLimit(5);
+            member.setTotalFines(0.0);
             memberRepository.save(member);
-            System.out.println("✅ Member user created!");
+            log.info("✅ Member user created!");
+
+            log.info("✅ All members created successfully!");
+        } catch (Exception e) {
+            log.warn("Could not load members: {}", e.getMessage());
+            e.printStackTrace();
         }
+    }
 
-        // Load books if empty
-        if (bookRepository.count() == 0) {
-            System.out.println("📚 Loading books...");
+    private void loadBooks() {
+        try {
+            if (bookRepository.count() > 0) {
+                log.info("✅ Books already exist, skipping creation");
+                return;
+            }
 
-            // ✅ ADDED: Sample books for testing
+            log.info("📚 Loading sample books...");
+
             List<Book> books = Arrays.asList(
                     createBook("The Great Gatsby", "F. Scott Fitzgerald", "Classic", 5),
                     createBook("To Kill a Mockingbird", "Harper Lee", "Classic", 3),
                     createBook("1984", "George Orwell", "Dystopian", 4),
                     createBook("Pride and Prejudice", "Jane Austen", "Romance", 3),
-                    createBook("The Catcher in the Rye", "J.D. Salinger", "Classic", 2)
+                    createBook("The Catcher in the Rye", "J.D. Salinger", "Fiction", 2),
+                    createBook("Harry Potter and the Sorcerer's Stone", "J.K. Rowling", "Fantasy", 6),
+                    createBook("The Hobbit", "J.R.R. Tolkien", "Fantasy", 4),
+                    createBook("The Da Vinci Code", "Dan Brown", "Mystery", 3)
             );
 
             bookRepository.saveAll(books);
-            System.out.println("✅ " + books.size() + " books loaded successfully!");
+            log.info("✅ {} books loaded successfully!", books.size());
+        } catch (Exception e) {
+            log.warn("Could not load books: {}", e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    // Helper method to create books
     private Book createBook(String title, String author, String category, int quantity) {
         Book book = new Book();
         book.setTitle(title);
