@@ -1,5 +1,0 @@
-# Disable automatic SQL script execution during tests
-spring.sql.init.mode=never
-
-# Do not auto-update schema (optional, but safe)
-spring.jpa.hibernate.ddl-auto=validate
