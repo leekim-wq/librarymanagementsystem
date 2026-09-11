@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -15,11 +16,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     private MemberRepository memberRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-        // Try to find by username first, then by email
-        Member member = memberRepository.findByUsername(usernameOrEmail)
-                .orElseGet(() -> memberRepository.findByEmail(usernameOrEmail)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail)));
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        // Allow login by email OR username
+        Member member = memberRepository.findByEmailOrUsername(identifier, identifier)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User not found with email or username: " + identifier));
+
         return member;
     }
 }

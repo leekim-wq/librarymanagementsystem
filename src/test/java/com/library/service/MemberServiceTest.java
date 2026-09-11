@@ -15,7 +15,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -137,23 +136,30 @@ class MemberServiceTest {
         verify(memberRepository, times(1)).existsByEmail("notfound@example.com");
     }
 
+    // ============================================================
+    // FIXED: These two tests now use existsByUsername to match
+    // the actual MemberService implementation.
+    // ============================================================
+
     @Test
     void usernameExists_shouldReturnTrue_whenUsernameExists() {
-        when(memberRepository.findByUsername("testuser")).thenReturn(Optional.of(member));
+        when(memberRepository.existsByUsername("testuser")).thenReturn(true);
 
         boolean exists = memberService.usernameExists("testuser");
 
-        assertTrue(exists);
-        verify(memberRepository, times(1)).findByUsername("testuser");
+        assertTrue(exists, "Expected usernameExists to return true for existing username");
+        verify(memberRepository, times(1)).existsByUsername("testuser");
+        verify(memberRepository, never()).findByUsername(anyString());
     }
 
     @Test
     void usernameExists_shouldReturnFalse_whenUsernameDoesNotExist() {
-        when(memberRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+        when(memberRepository.existsByUsername("unknown")).thenReturn(false);
 
         boolean exists = memberService.usernameExists("unknown");
 
-        assertFalse(exists);
-        verify(memberRepository, times(1)).findByUsername("unknown");
+        assertFalse(exists, "Expected usernameExists to return false for non-existing username");
+        verify(memberRepository, times(1)).existsByUsername("unknown");
+        verify(memberRepository, never()).findByUsername(anyString());
     }
 }

@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface LoanRepository extends JpaRepository<Loan, Long> {
 
-    // ----- Existing methods (keep them) -----
+    // ---------- Member-scoped queries ----------
 
     List<Loan> findByMember(Member member);
 
@@ -26,11 +26,17 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
 
     long countByMemberAndReturnedFalse(Member member);
 
+    long countByMember(Member member);
+
+    // ---------- Book-scoped queries ----------
+
     List<Loan> findByBookAndReturnedFalse(Book book);
 
     long countByBookAndReturnedFalse(Book book);
 
     Optional<Loan> findByBookIdAndMemberIdAndReturnedFalse(Long bookId, Long memberId);
+
+    // ---------- Status / Date queries ----------
 
     @Query("SELECT l FROM Loan l WHERE l.returned = false AND l.dueDate < CURRENT_DATE")
     List<Loan> findOverdueLoans();
@@ -42,13 +48,25 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
 
     List<Loan> findByReturnDateAfterAndReturnedTrue(LocalDate date);
 
+    // ---------- Aggregates ----------
+
     @Query("SELECT COALESCE(SUM(l.fine), 0) FROM Loan l WHERE l.member = :member")
     Double getTotalFinesByMember(@Param("member") Member member);
 
-    @Query("SELECT l.book, COUNT(l) as borrowCount FROM Loan l GROUP BY l.book ORDER BY borrowCount DESC")
+    @Query("SELECT l.book, COUNT(l) AS borrowCount FROM Loan l GROUP BY l.book ORDER BY borrowCount DESC")
     List<Object[]> findMostBorrowedBooksWithCount();
 
-    // ===== NEW: Eager fetch methods =====
+    // Used by the admin dashboard to count all currently active loans
+    long countByReturnedFalse();
+
+    // ---------- Eager-fetch variants (avoid LazyInitializationException) ----------
+
+    /**
+     * Find all loans for a member, with Book and Member loaded eagerly.
+     * Useful when rendering loan lists in templates outside a transaction.
+     */
+    @Query("SELECT l FROM Loan l JOIN FETCH l.book JOIN FETCH l.member WHERE l.member = :member")
+    List<Loan> findByMemberWithBookAndMember(@Param("member") Member member);
 
     /**
      * Find all loans for a member, with the Book loaded eagerly.

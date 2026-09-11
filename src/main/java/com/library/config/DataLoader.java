@@ -62,7 +62,7 @@ public class DataLoader implements CommandLineRunner {
             admin.setBorrowingLimit(10);
             admin.setTotalFines(0.0);
             memberRepository.save(admin);
-            log.info("✅ Admin user created!");
+            log.info("✅ Admin user created! (email=admin@library.com, username=admin)");
 
             // Librarian
             Member librarian = new Member();
@@ -77,7 +77,7 @@ public class DataLoader implements CommandLineRunner {
             librarian.setBorrowingLimit(15);
             librarian.setTotalFines(0.0);
             memberRepository.save(librarian);
-            log.info("✅ Librarian user created!");
+            log.info("✅ Librarian user created! (email=librarian@library.com, username=librarian)");
 
             // Regular Member
             Member member = new Member();
@@ -92,7 +92,7 @@ public class DataLoader implements CommandLineRunner {
             member.setBorrowingLimit(5);
             member.setTotalFines(0.0);
             memberRepository.save(member);
-            log.info("✅ Member user created!");
+            log.info("✅ Member user created! (email=member@library.com, username=member)");
 
             log.info("✅ All members created successfully!");
         } catch (Exception e) {

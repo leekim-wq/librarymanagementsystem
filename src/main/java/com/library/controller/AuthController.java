@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
-import java.util.regex.Pattern;
 
 @Controller
 public class AuthController {
@@ -22,10 +21,6 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    // Password validation: min 8 chars, at least 1 uppercase, 1 lowercase, 1 digit, 1 special
-    private static final Pattern PASSWORD_PATTERN =
-            Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$");
 
     @GetMapping("/login")
     public String login(@RequestParam(value = "error", required = false) String error,
@@ -48,26 +43,34 @@ public class AuthController {
 
     @PostMapping("/register")
     public String registerUser(Member member, RedirectAttributes redirectAttributes) {
-        // 1. Check username uniqueness
-        if (memberService.usernameExists(member.getUsername())) {
-            redirectAttributes.addFlashAttribute("error", "Username already taken!");
-            return "redirect:/register";
-        }
 
-        // 2. Check email uniqueness
+        // Duplicate email check
         if (memberService.memberExists(member.getEmail())) {
             redirectAttributes.addFlashAttribute("error", "Email already registered!");
             return "redirect:/register";
         }
 
-        // 3. Validate password strength
-        if (!isValidPassword(member.getPassword())) {
-            redirectAttributes.addFlashAttribute("error",
-                    "Password must be at least 8 characters, include uppercase, lowercase, digit, and special character.");
+        // Username handling — auto-generate from email if empty
+        String username = member.getUsername();
+        if (username == null || username.trim().isEmpty()) {
+            username = member.getEmail().split("@")[0];
+        }
+        if (memberService.usernameExists(username)) {
+            // Make it unique by appending a number
+            String base = username;
+            int n = 1;
+            while (memberService.usernameExists(base + n)) n++;
+            username = base + n;
+        }
+        member.setUsername(username);
+
+        // Password validation
+        if (member.getPassword() == null || member.getPassword().length() < 6) {
+            redirectAttributes.addFlashAttribute("error", "Password must be at least 6 characters!");
             return "redirect:/register";
         }
 
-        // 4. Encode password
+        // Encode password
         member.setPassword(passwordEncoder.encode(member.getPassword()));
         member.setMembershipDate(LocalDate.now());
         member.setRole("MEMBER");
@@ -75,16 +78,11 @@ public class AuthController {
         member.setBorrowingLimit(5);
         member.setTotalFines(0.0);
 
-        // Save user
         memberService.saveMember(member);
 
-        redirectAttributes.addFlashAttribute("success", "Registration successful! Please login.");
+        redirectAttributes.addFlashAttribute("success",
+                "Registration successful! You can now log in with your email or username.");
         return "redirect:/login";
-    }
-
-    private boolean isValidPassword(String password) {
-        if (password == null) return false;
-        return PASSWORD_PATTERN.matcher(password).matches();
     }
 
     @GetMapping("/access-denied")

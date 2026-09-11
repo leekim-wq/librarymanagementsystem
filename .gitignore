@@ -1,33 +1,123 @@
-HELP.md
+# ============================================
+# Java / Maven
+# ============================================
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+*.class
+*.log
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
+# ============================================
+# IntelliJ IDEA
+# ============================================
+.idea/
 *.iws
 *.iml
 *.ipr
+out/
+.idea_modules/
+atlassian-ide-plugin.xml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+# ============================================
+# Eclipse / VS Code
+# ============================================
+.settings/
+.project
+.classpath
 .vscode/
+.factorypath
+
+# ============================================
+# NetBeans
+# ============================================
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ============================================
+# Environment / Secrets
+# ============================================
+.env
+.env.*
+!.env.example
+*.env
+application-local.properties
+application-secret.properties
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================================
+# Docker
+# ============================================
+docker-compose.override.yml
+.docker/
+*.pid
+*.seed
+
+# ============================================
+# Maven Wrapper (keep these)
+# ============================================
+!.mvn/wrapper/maven-wrapper.properties
+mvnw
+mvnw.cmd
+
+# ============================================
+# H2 Database
+# ============================================
+*.mv.db
+*.trace.db
+*.lock.db
+
+# ============================================
+# Build Output
+# ============================================
+build/
+dist/
+out/
+bin/
+!.mvn/wrapper/maven-wrapper.jar
+
+# ============================================
+# Test Output
+# ============================================
+.surefire/
+failsafe-reports/
+test-output/
+jacoco.exec
+
+# ============================================
+# IDE - General
+# ============================================
+*.swp
+*.swo
+*~
+.idea/
+*.iml
+*.ipr
+*.iws

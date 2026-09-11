@@ -22,18 +22,12 @@ import java.util.stream.Collectors;
 public class BookService {
 
     private static final Logger log = LoggerFactory.getLogger(BookService.class);
+    private static final double FINE_LIMIT = 100.0;
 
-    @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private LoanRepository loanRepository;
-
-    @Autowired
-    private MemberRepository memberRepository;
-
-    @Autowired
-    private AIService aiService;
+    @Autowired private BookRepository bookRepository;
+    @Autowired private LoanRepository loanRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private AIService aiService;
 
     // ---------- Basic CRUD ----------
 
@@ -62,12 +56,23 @@ public class BookService {
 
     // ---------- Search & Filters ----------
 
+    /**
+     * Multi-field search across title, author, category, and description.
+     * Results are sorted by rating (best first).
+     * Returns an empty list if nothing matches.
+     */
     public List<Book> searchBooks(String query) {
         if (query == null || query.trim().isEmpty()) {
             return bookRepository.findAll();
         }
-        return bookRepository.findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(
-                query.trim(), query.trim());
+        String trimmed = query.trim();
+        List<Book> results = bookRepository.searchAcrossAllFields(trimmed);
+        results.sort((a, b) -> {
+            double r1 = a.getRating() == null ? 0.0 : a.getRating();
+            double r2 = b.getRating() == null ? 0.0 : b.getRating();
+            return Double.compare(r2, r1);
+        });
+        return results;
     }
 
     public List<Book> getAvailableBooks() {
@@ -84,19 +89,22 @@ public class BookService {
     public List<String> getAllCategories() {
         return bookRepository.findAll().stream()
                 .map(Book::getCategory)
-                .filter(category -> category != null && !category.isEmpty())
+                .filter(c -> c != null && !c.isEmpty())
                 .distinct()
                 .sorted()
                 .collect(Collectors.toList());
     }
 
-    // ===== NEW: Copy counts =====
+    // ---------- Copy counts ----------
+
     public long getTotalCopies() {
-        return bookRepository.sumTotalCopies();
+        Long v = bookRepository.sumTotalCopies();
+        return v == null ? 0L : v;
     }
 
     public long getAvailableCopies() {
-        return bookRepository.sumAvailableCopies();
+        Long v = bookRepository.sumAvailableCopies();
+        return v == null ? 0L : v;
     }
 
     // ---------- Most borrowed ----------
@@ -107,17 +115,26 @@ public class BookService {
 
     // ---------- AI Recommendations ----------
 
+    /**
+     * Returns only books that actually match the query.
+     * If nothing matches, returns an EMPTY list (no random padding).
+     */
     public List<Book> getAIRecommendations(String query) {
         List<Book> availableBooks = getAvailableBooks();
         if (availableBooks.isEmpty()) {
             return List.of();
         }
-        try {
-            return aiService.getAIRecommendations(query, availableBooks);
-        } catch (Exception e) {
-            log.warn("AI recommendation failed, returning top 5 available books", e);
-            return availableBooks.stream().limit(5).collect(Collectors.toList());
-        }
+        // Do NOT catch and pad with random books — return what AI returns
+        return aiService.getAIRecommendations(query, availableBooks);
+    }
+
+    // ---------- Borrowing Eligibility ----------
+
+    public boolean canBorrow(Member member) {
+        if (member == null || member.getId() == null) return false;
+        long activeLoans = loanRepository.countByMemberAndReturnedFalse(member);
+        int limit = member.getBorrowingLimit() == null ? 5 : member.getBorrowingLimit();
+        return activeLoans < limit && member.getTotalFines() < FINE_LIMIT;
     }
 
     // ---------- Borrow / Return ----------
@@ -129,100 +146,72 @@ public class BookService {
             log.warn("Invalid borrow request: bookId={}, member={}", bookId, member);
             return false;
         }
-
         log.debug("Attempting to borrow bookId={} for memberId={}", bookId, member.getId());
 
         try {
-            // 1. Fetch book
             Optional<Book> bookOpt = bookRepository.findById(bookId);
             if (bookOpt.isEmpty()) {
-                log.warn("Book not found with id: {}", bookId);
+                log.warn("Book not found: {}", bookId);
                 return false;
             }
             Book book = bookOpt.get();
-            log.debug("Book found: title={}, availableQuantity={}", book.getTitle(), book.getAvailableQuantity());
 
-            // 2. Check availability
             if (book.getAvailableQuantity() <= 0) {
-                log.warn("Book not available: availableQuantity={}", book.getAvailableQuantity());
+                log.warn("Book not available: {}", bookId);
                 return false;
             }
 
-            // 3. Fetch fresh member
             Optional<Member> memberOpt = memberRepository.findById(member.getId());
             if (memberOpt.isEmpty()) {
-                log.warn("Member not found with id: {}", member.getId());
+                log.warn("Member not found: {}", member.getId());
                 return false;
             }
-            Member attachedMember = memberOpt.get();
-            log.debug("Member found: email={}, borrowingLimit={}, totalFines={}",
-                    attachedMember.getEmail(), attachedMember.getBorrowingLimit(), attachedMember.getTotalFines());
+            Member attached = memberOpt.get();
 
-            // 4. Check borrowing eligibility
-            if (!attachedMember.canBorrow()) {
-                log.warn("Member cannot borrow: loans count or fines exceeded");
-                long activeLoans = loanRepository.countByMemberAndReturnedFalse(attachedMember);
-                log.debug("Active loans count: {}", activeLoans);
+            if (!canBorrow(attached)) {
+                log.warn("Member cannot borrow: id={}", attached.getId());
                 return false;
             }
 
-            // 5. Check if already borrowed
-            Optional<Loan> existingLoan = loanRepository.findByBookIdAndMemberIdAndReturnedFalse(
-                    bookId, attachedMember.getId());
-            if (existingLoan.isPresent()) {
-                log.warn("Member already has an active loan for this book");
+            Optional<Loan> existing = loanRepository
+                    .findByBookIdAndMemberIdAndReturnedFalse(bookId, attached.getId());
+            if (existing.isPresent()) {
+                log.warn("Member already borrowed this book");
                 return false;
             }
 
-            // 6. Create loan
             Loan loan = new Loan();
             loan.setBook(book);
-            loan.setMember(attachedMember);
+            loan.setMember(attached);
             loan.setBorrowDate(LocalDate.now());
             loan.setDueDate(LocalDate.now().plusDays(14));
-
             loanRepository.save(loan);
-            log.debug("Loan created with id: {}", loan.getId());
 
-            // 7. Update book availability
             book.setAvailableQuantity(book.getAvailableQuantity() - 1);
             book.setTotalBorrows(book.getTotalBorrows() + 1);
             bookRepository.save(book);
-            log.debug("Book availability updated to: {}", book.getAvailableQuantity());
 
             return true;
 
         } catch (Exception e) {
-            log.error("Unexpected error during borrowBook for bookId={}, memberId={}: {}",
-                    bookId, member.getId(), e.getMessage(), e);
+            log.error("Error during borrowBook: {}", e.getMessage(), e);
             return false;
         }
     }
 
     @Transactional
     public boolean returnBook(Long loanId) {
-        if (loanId == null) {
-            log.warn("ReturnBook called with null loanId");
-            return false;
-        }
+        if (loanId == null) return false;
 
         try {
             Optional<Loan> loanOpt = loanRepository.findById(loanId);
-            if (loanOpt.isEmpty()) {
-                log.warn("Loan not found with id: {}", loanId);
-                return false;
-            }
+            if (loanOpt.isEmpty()) return false;
 
             Loan loan = loanOpt.get();
-
-            if (loan.isReturned()) {
-                log.warn("Loan already returned: {}", loanId);
-                return false;
-            }
+            if (loan.isReturned()) return false;
 
             loan.setReturned(true);
             loan.setReturnDate(LocalDate.now());
-
             double fine = loan.calculateFine();
             loan.setFine(fine);
             loanRepository.save(loan);
@@ -233,12 +222,12 @@ public class BookService {
 
             Member member = loan.getMember();
             member.setTotalFines(member.getTotalFines() + fine);
+            memberRepository.save(member);
 
-            log.debug("Book returned successfully, fine={}", fine);
             return true;
 
         } catch (Exception e) {
-            log.error("Unexpected error during returnBook for loanId={}: {}", loanId, e.getMessage(), e);
+            log.error("Error during returnBook: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -246,8 +235,7 @@ public class BookService {
     // ---------- Utility ----------
 
     public boolean isBookAvailable(Long bookId) {
-        Optional<Book> bookOpt = bookRepository.findById(bookId);
-        return bookOpt.map(Book::isAvailable).orElse(false);
+        return bookRepository.findById(bookId).map(Book::isAvailable).orElse(false);
     }
 
     public long getActiveLoansCount(Member member) {

@@ -2,7 +2,6 @@ package com.library.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,7 +18,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Member implements UserDetails {
 
     @Id
@@ -27,10 +25,10 @@ public class Member implements UserDetails {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String username;
-
-    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(unique = true)
+    private String username;
 
     @Column(nullable = false)
     private String name;
@@ -42,18 +40,19 @@ public class Member implements UserDetails {
     private String address;
 
     @Column(name = "membership_date")
-    private LocalDate membershipDate;
+    private LocalDate membershipDate = LocalDate.now();
 
     @Column(name = "membership_type")
-    private String membershipType;
+    private String membershipType = "Standard";
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // EAGER fetch: a member's loans are needed for canBorrow() and dashboards
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Loan> loans = new ArrayList<>();
 
     private boolean active = true;
 
     @Column(name = "total_fines")
-    private Double totalFines = 0.0;
+    private double totalFines = 0.0;
 
     @Column(name = "borrowing_limit")
     private Integer borrowingLimit = 5;
@@ -61,18 +60,20 @@ public class Member implements UserDetails {
     @Column(name = "role")
     private String role = "MEMBER";
 
-    // ---------- Business logic ----------
-    public boolean canBorrow() {
-        long activeLoans = loans.stream()
-                .filter(loan -> !loan.isReturned())
-                .count();
-        return activeLoans < borrowingLimit && totalFines < 100.0;
-    }
+    // ========== UserDetails Implementation ==========
 
-    // ---------- UserDetails implementation ----------
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+    }
+
+    /**
+     * Returns username if set, otherwise email.
+     * Spring Security uses this as the "principal name".
+     */
+    @Override
+    public String getUsername() {
+        return username != null && !username.isEmpty() ? username : email;
     }
 
     @Override

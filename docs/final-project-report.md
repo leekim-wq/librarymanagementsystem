@@ -151,7 +151,7 @@ A separate **AI Microservice** (Python Flask) provides book recommendations via 
 ## 8. CI/CD Pipeline
 
 - **Tool:** GitHub Actions
-- **Workflow:** `.github/workflows/ci.yml`
+- **Workflow:** `../.github/workflows/ci-cd.yml`
 - **Triggers:** Push to `main`, `develop`, and pull requests.
 - **Steps:**
     1. Checkout code.
