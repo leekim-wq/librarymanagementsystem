@@ -58,8 +58,7 @@ public class BookService {
 
     /**
      * Multi-field search across title, author, category, and description.
-     * Results are sorted by rating (best first).
-     * Returns an empty list if nothing matches.
+     * Sorted by rating (best first). Empty list if no match.
      */
     public List<Book> searchBooks(String query) {
         if (query == null || query.trim().isEmpty()) {
@@ -115,16 +114,11 @@ public class BookService {
 
     // ---------- AI Recommendations ----------
 
-    /**
-     * Returns only books that actually match the query.
-     * If nothing matches, returns an EMPTY list (no random padding).
-     */
     public List<Book> getAIRecommendations(String query) {
         List<Book> availableBooks = getAvailableBooks();
         if (availableBooks.isEmpty()) {
             return List.of();
         }
-        // Do NOT catch and pad with random books — return what AI returns
         return aiService.getAIRecommendations(query, availableBooks);
     }
 

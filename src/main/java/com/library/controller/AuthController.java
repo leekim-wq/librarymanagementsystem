@@ -22,12 +22,16 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // ============================================================
+    // LOGIN PAGE
+    // ============================================================
     @GetMapping("/login")
     public String login(@RequestParam(value = "error", required = false) String error,
                         @RequestParam(value = "logout", required = false) String logout,
+                        @RequestParam(value = "registered", required = false) String registered,
                         Model model) {
         if (error != null) {
-            model.addAttribute("error", "Invalid email/username or password!");
+            model.addAttribute("error", "Invalid username or password!");
         }
         if (logout != null) {
             model.addAttribute("message", "You have been logged out successfully.");
@@ -35,28 +39,50 @@ public class AuthController {
         return "login";
     }
 
+    // ============================================================
+    // REGISTER PAGE
+    // ============================================================
     @GetMapping("/register")
     public String register(Model model) {
         model.addAttribute("member", new Member());
         return "register";
     }
 
+    // ============================================================
+    // REGISTER POST
+    // ============================================================
     @PostMapping("/register")
-    public String registerUser(Member member, RedirectAttributes redirectAttributes) {
+    public String registerUser(Member member,
+                               RedirectAttributes redirectAttributes) {
 
-        // Duplicate email check
-        if (memberService.memberExists(member.getEmail())) {
-            redirectAttributes.addFlashAttribute("error", "Email already registered!");
+        // ----- Validate required fields -----
+        if (member.getEmail() == null || member.getEmail().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Email is required!");
+            return "redirect:/register";
+        }
+        if (member.getPassword() == null || member.getPassword().length() < 6) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Password must be at least 6 characters!");
+            return "redirect:/register";
+        }
+        if (member.getName() == null || member.getName().trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Full name is required!");
             return "redirect:/register";
         }
 
-        // Username handling — auto-generate from email if empty
+        // ----- Duplicate email check -----
+        if (memberService.memberExists(member.getEmail())) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Email already registered. Try logging in instead.");
+            return "redirect:/register";
+        }
+
+        // ----- Username handling -----
         String username = member.getUsername();
         if (username == null || username.trim().isEmpty()) {
             username = member.getEmail().split("@")[0];
         }
         if (memberService.usernameExists(username)) {
-            // Make it unique by appending a number
             String base = username;
             int n = 1;
             while (memberService.usernameExists(base + n)) n++;
@@ -64,13 +90,7 @@ public class AuthController {
         }
         member.setUsername(username);
 
-        // Password validation
-        if (member.getPassword() == null || member.getPassword().length() < 6) {
-            redirectAttributes.addFlashAttribute("error", "Password must be at least 6 characters!");
-            return "redirect:/register";
-        }
-
-        // Encode password
+        // ----- Encode password & set defaults -----
         member.setPassword(passwordEncoder.encode(member.getPassword()));
         member.setMembershipDate(LocalDate.now());
         member.setRole("MEMBER");
@@ -78,15 +98,19 @@ public class AuthController {
         member.setBorrowingLimit(5);
         member.setTotalFines(0.0);
 
+        // ----- Save -----
         memberService.saveMember(member);
 
         redirectAttributes.addFlashAttribute("success",
-                "Registration successful! You can now log in with your email or username.");
-        return "redirect:/login";
+                "Registration successful! Please log in with your credentials.");
+        return "redirect:/login?registered=true";
     }
 
+    // ============================================================
+    // ACCESS DENIED PAGE
+    // ============================================================
     @GetMapping("/access-denied")
     public String accessDenied() {
-        return "access-denied";
+        return "error/403";
     }
 }

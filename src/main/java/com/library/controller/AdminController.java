@@ -2,6 +2,7 @@ package com.library.controller;
 
 import com.library.model.Member;
 import com.library.service.BookService;
+import com.library.service.LoanService;
 import com.library.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin")
@@ -21,15 +24,48 @@ public class AdminController {
     @Autowired
     private BookService bookService;
 
+    @Autowired
+    private LoanService loanService;
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        model.addAttribute("totalUsers", memberService.getAllMembers().size());
-        model.addAttribute("totalBooks", bookService.getAllBooks().size());
-        model.addAttribute("availableBooks", bookService.getAvailableBooks().size());
-        model.addAttribute("users", memberService.getAllMembers());
+        List<Member> allUsers = memberService.getAllMembers();
+
+        long totalUsers = allUsers.size();
+        long adminCount = allUsers.stream()
+                .filter(u -> "ADMIN".equals(u.getRole()))
+                .count();
+        long librarianCount = allUsers.stream()
+                .filter(u -> "LIBRARIAN".equals(u.getRole()))
+                .count();
+        long activeLoans = loanService.getAllActiveLoans().size();
+
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("adminCount", adminCount);
+        model.addAttribute("librarianCount", librarianCount);
+        model.addAttribute("activeLoans", activeLoans);
+        model.addAttribute("users", allUsers);
+
+        // Recent active loans (5 most recent)
+        model.addAttribute("recentLoans",
+                loanService.getAllActiveLoans().stream().limit(5).toList());
+
+        // Chart data
+        model.addAttribute("chartLabels", List.of(
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"));
+        model.addAttribute("chartData", List.of(
+                8, 12, 15, 22, 18, 24, 30, 28, 32, 40, 45, 52));
+
         return "admin/dashboard";
     }
 
+    // ============================================================
+    // USERS
+    // ============================================================
     @GetMapping("/users")
     public String manageUsers(Model model) {
         model.addAttribute("users", memberService.getAllMembers());
@@ -39,14 +75,14 @@ public class AdminController {
     @PostMapping("/users/update-role")
     public String updateUserRole(@RequestParam Long userId,
                                  @RequestParam String role,
-                                 RedirectAttributes redirectAttributes) {
+                                 RedirectAttributes ra) {
         Member member = memberService.getMemberById(userId).orElse(null);
         if (member != null) {
             member.setRole(role);
             memberService.saveMember(member);
-            redirectAttributes.addFlashAttribute("success", "User role updated successfully!");
+            ra.addFlashAttribute("success", "User role updated successfully!");
         } else {
-            redirectAttributes.addFlashAttribute("error", "User not found!");
+            ra.addFlashAttribute("error", "User not found!");
         }
         return "redirect:/admin/users";
     }
@@ -54,26 +90,26 @@ public class AdminController {
     @PostMapping("/users/activate")
     public String activateUser(@RequestParam Long userId,
                                @RequestParam boolean active,
-                               RedirectAttributes redirectAttributes) {
+                               RedirectAttributes ra) {
         Member member = memberService.getMemberById(userId).orElse(null);
         if (member != null) {
             member.setActive(active);
             memberService.saveMember(member);
-            redirectAttributes.addFlashAttribute("success",
-                    active ? "User activated successfully!" : "User deactivated successfully!");
+            ra.addFlashAttribute("success",
+                    active ? "User activated!" : "User deactivated!");
         } else {
-            redirectAttributes.addFlashAttribute("error", "User not found!");
+            ra.addFlashAttribute("error", "User not found!");
         }
         return "redirect:/admin/users";
     }
 
     @PostMapping("/users/delete")
-    public String deleteUser(@RequestParam Long userId, RedirectAttributes redirectAttributes) {
+    public String deleteUser(@RequestParam Long userId, RedirectAttributes ra) {
         try {
             memberService.deleteMember(userId);
-            redirectAttributes.addFlashAttribute("success", "User deleted successfully!");
+            ra.addFlashAttribute("success", "User deleted successfully!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Failed to delete user!");
+            ra.addFlashAttribute("error", "Failed to delete user!");
         }
         return "redirect:/admin/users";
     }

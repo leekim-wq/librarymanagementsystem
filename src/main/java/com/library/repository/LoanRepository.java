@@ -18,22 +18,18 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     // ---------- Member-scoped queries ----------
 
     List<Loan> findByMember(Member member);
-
     List<Loan> findByMemberAndReturnedFalse(Member member);
 
     @Query("SELECT l FROM Loan l WHERE l.member.id = :memberId AND l.returned = false")
     List<Loan> findByMemberIdAndReturnedFalse(@Param("memberId") Long memberId);
 
     long countByMemberAndReturnedFalse(Member member);
-
     long countByMember(Member member);
 
     // ---------- Book-scoped queries ----------
 
     List<Loan> findByBookAndReturnedFalse(Book book);
-
     long countByBookAndReturnedFalse(Book book);
-
     Optional<Loan> findByBookIdAndMemberIdAndReturnedFalse(Long bookId, Long memberId);
 
     // ---------- Status / Date queries ----------
@@ -45,7 +41,6 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     List<Loan> findOverdueLoansByMember(@Param("member") Member member);
 
     List<Loan> findByDueDateBetweenAndReturnedFalse(LocalDate startDate, LocalDate endDate);
-
     List<Loan> findByReturnDateAfterAndReturnedTrue(LocalDate date);
 
     // ---------- Aggregates ----------
@@ -56,27 +51,42 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     @Query("SELECT l.book, COUNT(l) AS borrowCount FROM Loan l GROUP BY l.book ORDER BY borrowCount DESC")
     List<Object[]> findMostBorrowedBooksWithCount();
 
-    // Used by the admin dashboard to count all currently active loans
     long countByReturnedFalse();
 
-    // ---------- Eager-fetch variants (avoid LazyInitializationException) ----------
+    // ---------- Eager-fetch for member views ----------
 
-    /**
-     * Find all loans for a member, with Book and Member loaded eagerly.
-     * Useful when rendering loan lists in templates outside a transaction.
-     */
-    @Query("SELECT l FROM Loan l JOIN FETCH l.book JOIN FETCH l.member WHERE l.member = :member")
-    List<Loan> findByMemberWithBookAndMember(@Param("member") Member member);
-
-    /**
-     * Find all loans for a member, with the Book loaded eagerly.
-     */
     @Query("SELECT l FROM Loan l JOIN FETCH l.book WHERE l.member = :member")
     List<Loan> findByMemberWithBook(@Param("member") Member member);
 
-    /**
-     * Find all active (not returned) loans for a member, with the Book loaded eagerly.
-     */
     @Query("SELECT l FROM Loan l JOIN FETCH l.book WHERE l.member = :member AND l.returned = false")
     List<Loan> findByMemberAndReturnedFalseWithBook(@Param("member") Member member);
+
+    // ============================================================
+    // NEW: Staff-wide queries (Admin / Librarian)
+    // ============================================================
+
+    /**
+     * All active (not-returned) loans across the entire library,
+     * with Book and Member eagerly loaded.
+     * Ordered by due date (soonest first).
+     */
+    @Query("""
+        SELECT l FROM Loan l
+        JOIN FETCH l.book
+        JOIN FETCH l.member
+        WHERE l.returned = false
+        ORDER BY l.dueDate ASC
+    """)
+    List<Loan> findAllActiveLoans();
+
+    /**
+     * All loans (active + returned) with Book and Member, for reporting.
+     */
+    @Query("""
+        SELECT l FROM Loan l
+        JOIN FETCH l.book
+        JOIN FETCH l.member
+        ORDER BY l.borrowDate DESC
+    """)
+    List<Loan> findAllWithDetails();
 }

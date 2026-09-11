@@ -16,6 +16,7 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 # Copy the built JAR from the build stage
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8081
+# Match the port used by SERVER_PORT in .env
+EXPOSE 8080
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

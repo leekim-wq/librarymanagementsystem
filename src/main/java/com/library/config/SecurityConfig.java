@@ -29,33 +29,42 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(authz -> authz
-                        // Public access
-                        .requestMatchers("/", "/home", "/books", "/books/**").permitAll()
+                        // ---------- PUBLIC ----------
+                        .requestMatchers("/", "/home", "/error", "/error/**").permitAll()
+                        .requestMatchers("/books", "/books/**").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                        .requestMatchers("/register", "/login", "/logout").permitAll()
+                        .requestMatchers("/register", "/login", "/logout", "/perform_login").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
 
-                        // AI Assistant - authenticated users only
+                        // ---------- AI Assistant — authenticated users ----------
                         .requestMatchers("/api/ai/**").authenticated()
 
-                        // Librarian permissions (add/edit/delete books)
-                        .requestMatchers("/books/add", "/books/edit/**", "/books/delete/**").hasAnyRole("LIBRARIAN", "ADMIN")
-                        .requestMatchers("/api/books/manage/**").hasAnyRole("LIBRARIAN", "ADMIN")
+                        // ---------- Librarian/Admin — book management ----------
+                        .requestMatchers("/books/add", "/books/edit/**", "/books/delete/**")
+                        .hasAnyRole("LIBRARIAN", "ADMIN")
+                        .requestMatchers("/api/books/manage/**")
+                        .hasAnyRole("LIBRARIAN", "ADMIN")
 
-                        // Admin only
+                        // ---------- STAFF ONLY — loan management dashboard ----------
+                        .requestMatchers("/loans/manage", "/loans/manage/**")
+                        .hasAnyRole("LIBRARIAN", "ADMIN")
+
+                        // ---------- STAFF ONLY — return books ----------
+                        .requestMatchers("/loans/return/**")
+                        .hasAnyRole("LIBRARIAN", "ADMIN")
+
+                        // ---------- Admin only ----------
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // 🔒 BORROWING: only members can borrow
+                        // ---------- Member only — borrowing ----------
                         .requestMatchers("/books/borrow/**").hasRole("MEMBER")
 
-                        // 🔒 RETURNING: only librarians/admins can return
-                        .requestMatchers("/loans/return/**").hasAnyRole("LIBRARIAN", "ADMIN")
-
-                        // Cart - authenticated users (but service method also checks role)
+                        // ---------- Cart — authenticated users ----------
                         .requestMatchers("/cart/**").authenticated()
 
-                        // Loans view - authenticated users
-                        .requestMatchers("/loans/**").authenticated()
+                        // ---------- My Loans view — any authenticated user ----------
+                        .requestMatchers("/loans", "/loans/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
@@ -73,6 +82,9 @@ public class SecurityConfig {
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
+                )
+                .exceptionHandling(ex -> ex
+                        .accessDeniedPage("/error/403")
                 );
 
         return http.build();

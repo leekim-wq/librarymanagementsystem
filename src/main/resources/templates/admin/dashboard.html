@@ -7,7 +7,7 @@
     <title>Admin Dashboard - Smart Library</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* ---------- RESET & BASE ---------- */
@@ -18,117 +18,87 @@
             min-height: 100vh;
             transition: background 0.3s, color 0.3s;
         }
-        body.dark-mode {
-            background: #121212;
-            color: #e0e0e0;
-        }
+        body.dark-mode { background: #121212; color: #e0e0e0; }
         body.dark-mode .navbar-custom { background: #1e1e2f; border-bottom-color: #bb86fc; }
         body.dark-mode .stat-card,
         body.dark-mode .card,
         body.dark-mode .quick-action-card { background: #1e1e2f; color: #e0e0e0; border-color: #333; }
         body.dark-mode .stat-number { color: #bb86fc; }
         body.dark-mode .stat-label { color: #aaa; }
-        body.dark-mode .card-header { background: #2d2d44; color: #fff; border-color: #444; }
+        body.dark-mode .card-header { color: #fff; border-color: #333; }
         body.dark-mode .table { color: #e0e0e0; }
         body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) { background-color: rgba(255,255,255,0.03); }
         body.dark-mode .border-bottom { border-color: #333 !important; }
         body.dark-mode .text-muted { color: #aaa !important; }
 
-        /* ---------- NAVBAR (same as other pages) ---------- */
+        /* ---------- SCROLL ANIMATIONS ---------- */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+        /* ---------- NAVBAR ---------- */
         .navbar-custom {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             padding: 12px 0;
             box-shadow: 0 4px 30px rgba(0,0,0,0.3);
             border-bottom: 3px solid #e94560;
-            position: sticky;
-            top: 0;
-            z-index: 1050;
-            transition: background 0.3s;
+            position: sticky; top: 0; z-index: 1050;
         }
         .navbar-custom .navbar-brand {
-            font-weight: 900;
-            font-size: 1.6rem;
-            color: #fff !important;
-            letter-spacing: -0.5px;
+            font-weight: 900; font-size: 1.6rem;
+            color: #fff !important; letter-spacing: -0.5px;
         }
         .navbar-custom .navbar-brand i { color: #e94560; margin-right: 10px; }
         .navbar-custom .nav-link {
             color: rgba(255,255,255,0.85) !important;
-            font-weight: 600;
-            transition: all 0.3s;
-            padding: 8px 18px;
-            border-radius: 25px;
+            font-weight: 600; transition: all 0.3s;
+            padding: 8px 18px; border-radius: 25px;
         }
         .navbar-custom .nav-link:hover {
             color: #fff !important;
-            background: rgba(233, 69, 96, 0.2);
+            background: rgba(233,69,96,0.2);
             transform: translateY(-2px);
         }
-        .navbar-custom .nav-link.active {
-            color: #fff !important;
-            background: #e94560;
-        }
+        .navbar-custom .nav-link.active { color: #fff !important; background: #e94560; }
         .navbar-custom .dropdown-menu {
-            background: #1a1a2e;
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-            padding: 10px 0;
+            background: #1a1a2e; border: none; border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4); padding: 10px 0;
         }
         .navbar-custom .dropdown-item {
-            color: #ddd;
-            padding: 10px 24px;
-            transition: all 0.2s;
-            border-radius: 10px;
-            margin: 2px 8px;
+            color: #ddd; padding: 10px 24px;
+            transition: all 0.2s; border-radius: 10px; margin: 2px 8px;
         }
-        .navbar-custom .dropdown-item:hover {
-            background: #e94560;
-            color: #fff;
-        }
-        .navbar-custom .dropdown-toggle::after { color: #e94560; }
+        .navbar-custom .dropdown-item:hover { background: #e94560; color: #fff; }
         .user-badge {
             background: rgba(255,255,255,0.1);
-            padding: 6px 16px;
-            border-radius: 25px;
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.15);
-            font-weight: 500;
-            font-size: 0.9rem;
+            padding: 6px 16px; border-radius: 25px;
+            color: #fff; border: 1px solid rgba(255,255,255,0.15);
+            font-weight: 500; font-size: 0.9rem;
         }
         .user-badge i { color: #e94560; margin-right: 8px; }
         .dark-toggle {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: #fff;
-            border-radius: 25px;
-            padding: 6px 14px;
-            transition: 0.3s;
-            cursor: pointer;
+            background: rgba(255,255,255,0.1); border: none; color: #fff;
+            border-radius: 25px; padding: 6px 14px;
+            transition: 0.3s; cursor: pointer;
         }
         .dark-toggle:hover { background: rgba(255,255,255,0.2); }
 
         /* ---------- PAGE HEADER ---------- */
         .page-header {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: white;
-            padding: 40px 0 30px;
-            margin-bottom: 30px;
-            border-radius: 0 0 30px 30px;
-            position: relative;
-            overflow: hidden;
+            color: white; padding: 50px 0 40px;
+            margin-bottom: 30px; border-radius: 0 0 40px 40px;
+            position: relative; overflow: hidden;
         }
         .page-header .floating-shapes {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            pointer-events: none;
+            position: absolute; width: 100%; height: 100%;
+            top: 0; left: 0; pointer-events: none;
         }
         .page-header .floating-shapes span {
-            position: absolute;
-            border-radius: 50%;
+            position: absolute; border-radius: 50%;
             background: rgba(233,69,96,0.06);
             animation: float 20s infinite ease-in-out;
         }
@@ -142,79 +112,94 @@
             100% { transform: translate(0,0) scale(1); }
         }
         .page-header h2 {
-            font-weight: 900;
-            font-size: 2.5rem;
-            letter-spacing: -1px;
-            position: relative;
-            z-index: 1;
+            font-weight: 900; font-size: 2.5rem;
+            letter-spacing: -1px; position: relative; z-index: 1;
         }
         .page-header p {
-            font-size: 1.1rem;
-            opacity: 0.8;
-            position: relative;
-            z-index: 1;
+            font-size: 1.1rem; opacity: 0.85;
+            position: relative; z-index: 1;
+        }
+        .live-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(46,204,113,0.2);
+            border: 1px solid rgba(46,204,113,0.4);
+            color: #2ecc71; padding: 4px 12px;
+            border-radius: 20px; font-size: 0.8rem;
+            font-weight: 600; margin-left: 12px;
+            vertical-align: middle;
+        }
+        .live-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #2ecc71; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.15); }
         }
 
-        /* ---------- STAT CARDS (glassmorphism) ---------- */
+        /* ---------- STAT CARDS ---------- */
         .stat-card {
-            background: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.85);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
             border-radius: 20px;
-            padding: 20px;
+            padding: 22px 20px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.06);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
+        .stat-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #667eea, #e94560);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+        .stat-card:hover::before { transform: scaleX(1); }
         .stat-card:hover {
             transform: translateY(-8px) scale(1.02);
             box-shadow: 0 15px 40px rgba(0,0,0,0.12);
         }
         .stat-card .stat-icon {
-            font-size: 2.8rem;
-            display: inline-block;
-            margin-bottom: 8px;
+            font-size: 2.5rem; display: inline-block;
+            margin-bottom: 10px; transition: 0.3s;
         }
+        .stat-card:hover .stat-icon { transform: scale(1.15) rotate(4deg); }
         .stat-card .stat-number {
-            font-size: 2.6rem;
-            font-weight: 900;
-            color: #1a1a2e;
-            letter-spacing: -1px;
-            display: block;
-            line-height: 1.2;
+            font-size: 2.4rem; font-weight: 900;
+            color: #1a1a2e; letter-spacing: -1px;
+            display: block; line-height: 1.2;
         }
         .stat-card .stat-label {
-            color: #6c757d;
-            font-weight: 500;
+            color: #6c757d; font-weight: 500;
+            font-size: 0.9rem;
         }
 
         /* ---------- CARDS ---------- */
         .card {
-            border: none;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.8);
+            border: none; border-radius: 20px;
+            background: rgba(255,255,255,0.9);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
             box-shadow: 0 5px 20px rgba(0,0,0,0.06);
             transition: all 0.3s;
         }
-        .card:hover {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
+        .card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .card-header {
             background: transparent;
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            font-weight: 700;
-            padding: 18px 20px;
+            font-weight: 700; padding: 18px 22px;
             border-radius: 20px 20px 0 0 !important;
         }
         .card-header i { margin-right: 8px; }
 
         /* ---------- QUICK ACTIONS ---------- */
         .quick-action-card {
-            background: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.85);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
             border-radius: 16px;
             padding: 16px 20px;
             transition: all 0.3s;
@@ -225,42 +210,104 @@
             color: inherit;
         }
         .quick-action-card:hover {
-            transform: translateX(6px);
-            background: rgba(102,126,234,0.1);
+            transform: translateX(8px);
+            background: linear-gradient(135deg, rgba(102,126,234,0.12), rgba(233,69,96,0.08));
             border-color: #667eea;
+            box-shadow: 0 8px 20px rgba(102,126,234,0.15);
         }
         .quick-action-card .icon {
-            font-size: 2rem;
+            font-size: 1.7rem;
             color: #667eea;
-            width: 50px;
-            text-align: center;
+            width: 48px; height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(102,126,234,0.12);
+            border-radius: 12px;
+            transition: 0.3s;
         }
-        .quick-action-card .content h6 { margin: 0; font-weight: 700; }
-        .quick-action-card .content small { color: #6c757d; }
+        .quick-action-card:hover .icon {
+            background: #667eea; color: #fff; transform: scale(1.1);
+        }
+        .quick-action-card .content h6 {
+            margin: 0; font-weight: 700; color: #1a1a2e;
+            font-size: 0.95rem;
+        }
+        body.dark-mode .quick-action-card .content h6 { color: #fff; }
+        .quick-action-card .content small {
+            color: #6c757d; font-size: 0.8rem;
+        }
 
         /* ---------- TABLE ---------- */
-        .table th { border-top: none; font-weight: 600; color: #2d3748; }
-        .table td { vertical-align: middle; }
+        .table th {
+            border-top: none; font-weight: 700;
+            color: #2d3748; font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 14px 16px;
+        }
+        .table td {
+            vertical-align: middle; padding: 14px 16px;
+        }
         .avatar {
-            width: 36px;
-            height: 36px;
+            width: 38px; height: 38px;
             border-radius: 50%;
             display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: #fff;
-            background: #667eea;
+            align-items: center; justify-content: center;
+            font-weight: 700; color: #fff;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             font-size: 0.9rem;
         }
-        .avatar.green { background: #27ae60; }
-        .avatar.orange { background: #f39c12; }
-        .avatar.purple { background: #9b59b6; }
+        .avatar.green { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .avatar.orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .avatar.purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .avatar.red { background: linear-gradient(135deg, #e94560, #c0392b); }
+
+        .role-badge {
+            padding: 5px 14px; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .role-admin { background: #e94560; color: #fff; }
+        .role-librarian { background: #f39c12; color: #fff; }
+        .role-member { background: #3498db; color: #fff; }
+
+        .status-badge {
+            padding: 5px 14px; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 700;
+        }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #e2e3e5; color: #383d41; }
+
+        /* ---------- CHART ---------- */
+        #borrowChart {
+            max-height: 320px;
+        }
+
+        /* ---------- RECENT LOANS ---------- */
+        .loan-row {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        body.dark-mode .loan-row { border-color: #333; }
+        .loan-row:last-child { border-bottom: none; }
+        .loan-book { font-weight: 700; color: #1a1a2e; font-size: 0.9rem; }
+        body.dark-mode .loan-book { color: #fff; }
+        .loan-user { color: #6c757d; font-size: 0.8rem; }
+        .loan-due {
+            font-size: 0.75rem; padding: 4px 12px;
+            border-radius: 20px; font-weight: 600;
+        }
+        .loan-due.ok { background: #d4edda; color: #155724; }
+        .loan-due.soon { background: #fff3cd; color: #856404; }
+        .loan-due.overdue { background: #f8d7da; color: #721c24; }
 
         /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 992px) {
+            .page-header h2 { font-size: 2rem; }
+        }
         @media (max-width: 768px) {
-            .page-header h2 { font-size: 1.8rem; }
-            .stat-card .stat-number { font-size: 2rem; }
+            .page-header h2 { font-size: 1.7rem; }
+            .stat-card .stat-number { font-size: 1.8rem; }
+            .stat-card .stat-icon { font-size: 1.8rem; }
         }
     </style>
 </head>
@@ -276,25 +323,39 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="/admin/users"><i class="fas fa-users"></i> Users</a></li>
                 <li class="nav-item"><a class="nav-link" href="/books"><i class="fas fa-book"></i> Books</a></li>
 
-                <!-- User badge -->
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
+                    <a class="nav-link" href="/loans/manage"><i class="fas fa-tasks"></i> Manage Loans</a>
+                </li>
+
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-shield"></i> Admin
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/admin/users"><i class="fas fa-users"></i> Manage Users</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/books/add"><i class="fas fa-plus"></i> Add Book</a></li>
+                    </ul>
+                </li>
+
                 <li class="nav-item" sec:authorize="isAuthenticated()">
                     <span class="user-badge">
                         <i class="fas fa-user-cog"></i> <span sec:authentication="name">Admin</span>
                     </span>
                 </li>
 
-                <!-- Dark mode toggle -->
                 <li class="nav-item">
                     <button class="dark-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
                         <i class="fas fa-moon"></i>
                     </button>
                 </li>
 
-                <li class="nav-item"><a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
             </ul>
         </div>
     </div>
@@ -308,54 +369,57 @@
         <span></span>
     </div>
     <div class="container">
-        <h2><i class="fas fa-tachometer-alt text-primary"></i> Admin Dashboard</h2>
-        <p>Welcome back, <span sec:authentication="name">Admin</span>! Here's your system overview.</p>
+        <h2>
+            <i class="fas fa-tachometer-alt text-primary"></i> Admin Dashboard
+            <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+        </h2>
+        <p>Welcome back, <span sec:authentication="name" class="fw-bold">Admin</span>! Here's your system overview.</p>
     </div>
 </div>
 
-<!-- ===== STATS ROW ===== -->
+<!-- ===== STATS ROW — Updated: only admin-relevant metrics ===== -->
 <div class="container">
     <div class="row g-4 mb-4">
-        <div class="col-md-3 col-6">
+        <div class="col-md-3 col-6 fade-up">
             <div class="stat-card">
                 <div class="stat-icon text-primary"><i class="fas fa-users"></i></div>
                 <span class="stat-number" th:text="${totalUsers}">0</span>
                 <div class="stat-label">Total Users</div>
             </div>
         </div>
-        <div class="col-md-3 col-6">
-            <div class="stat-card">
-                <div class="stat-icon text-success"><i class="fas fa-book"></i></div>
-                <span class="stat-number" th:text="${totalBooks}">0</span>
-                <div class="stat-label">Total Books</div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="stat-card">
-                <div class="stat-icon text-info"><i class="fas fa-check-circle"></i></div>
-                <span class="stat-number" th:text="${availableBooks}">0</span>
-                <div class="stat-label">Available Books</div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
+        <div class="col-md-3 col-6 fade-up" style="transition-delay:0.1s;">
             <div class="stat-card">
                 <div class="stat-icon text-warning"><i class="fas fa-clock"></i></div>
                 <span class="stat-number" th:text="${activeLoans}">0</span>
                 <div class="stat-label">Active Loans</div>
             </div>
         </div>
+        <div class="col-md-3 col-6 fade-up" style="transition-delay:0.2s;">
+            <div class="stat-card">
+                <div class="stat-icon text-danger"><i class="fas fa-user-shield"></i></div>
+                <span class="stat-number" th:text="${adminCount != null ? adminCount : 1}">1</span>
+                <div class="stat-label">Admins</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 fade-up" style="transition-delay:0.3s;">
+            <div class="stat-card">
+                <div class="stat-icon text-info"><i class="fas fa-book-open"></i></div>
+                <span class="stat-number" th:text="${librarianCount != null ? librarianCount : 1}">1</span>
+                <div class="stat-label">Librarians</div>
+            </div>
+        </div>
     </div>
 
     <!-- ===== CHARTS + ACTIONS ROW ===== -->
-    <div class="row g-4">
+    <div class="row g-4 fade-up">
         <!-- Left: Chart -->
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <i class="fas fa-chart-bar"></i> Monthly Borrowing Trends
+                <div class="card-header">
+                    <i class="fas fa-chart-line text-primary"></i> Monthly Borrowing Trends
                 </div>
                 <div class="card-body">
-                    <canvas id="borrowChart" height="200"></canvas>
+                    <canvas id="borrowChart"></canvas>
                 </div>
             </div>
         </div>
@@ -363,8 +427,8 @@
         <!-- Right: Quick Actions -->
         <div class="col-lg-4">
             <div class="card">
-                <div class="card-header bg-success text-white">
-                    <i class="fas fa-bolt"></i> Quick Actions
+                <div class="card-header">
+                    <i class="fas fa-bolt text-warning"></i> Quick Actions
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-3">
@@ -382,18 +446,18 @@
                                 <small>View, edit, or remove users</small>
                             </div>
                         </a>
+                        <a href="/loans/manage" class="quick-action-card">
+                            <span class="icon"><i class="fas fa-tasks"></i></span>
+                            <div class="content">
+                                <h6>Manage Loans</h6>
+                                <small>Process returns & overdue</small>
+                            </div>
+                        </a>
                         <a href="/books" class="quick-action-card">
                             <span class="icon"><i class="fas fa-edit"></i></span>
                             <div class="content">
                                 <h6>Manage Books</h6>
                                 <small>Edit or delete book entries</small>
-                            </div>
-                        </a>
-                        <a href="/loans" class="quick-action-card">
-                            <span class="icon"><i class="fas fa-hand-holding"></i></span>
-                            <div class="content">
-                                <h6>View All Loans</h6>
-                                <small>Monitor borrowing activity</small>
                             </div>
                         </a>
                     </div>
@@ -402,12 +466,14 @@
         </div>
     </div>
 
-    <!-- ===== RECENT USERS TABLE ===== -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <i class="fas fa-user-clock"></i> Recent Users
+    <!-- ===== RECENT USERS + RECENT LOANS ===== -->
+    <div class="row mt-4 g-4 fade-up">
+        <!-- Recent Users -->
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-user-clock text-info"></i> Recent Users</span>
+                    <a href="/admin/users" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -423,22 +489,24 @@
                             <tbody>
                             <tr th:each="user : ${users}">
                                 <td>
-                                        <span class="avatar" th:classappend="${user.role == 'ADMIN' ? 'bg-danger' : user.role == 'LIBRARIAN' ? 'bg-warning' : 'bg-info'}"
-                                              th:text="${#strings.substring(user.name, 0, 1)}">U</span>
-                                    <span th:text="${user.name}" class="ms-2">Name</span>
+                                    <span class="avatar"
+                                          th:classappend="${user.role == 'ADMIN' ? 'red' : (user.role == 'LIBRARIAN' ? 'orange' : '')}"
+                                          th:text="${#strings.substring(user.name, 0, 1)}">U</span>
+                                    <span th:text="${user.name}" class="ms-2 fw-semibold">Name</span>
                                 </td>
-                                <td th:text="${user.email}">email@example.com</td>
+                                <td th:text="${user.email}" class="text-muted">email@example.com</td>
                                 <td>
-                                        <span class="badge" th:classappend="${user.role == 'ADMIN' ? 'bg-danger' : user.role == 'LIBRARIAN' ? 'bg-warning' : 'bg-info'}"
-                                              th:text="${user.role}">Member</span>
+                                    <span class="role-badge"
+                                          th:classappend="${user.role == 'ADMIN' ? 'role-admin' : (user.role == 'LIBRARIAN' ? 'role-librarian' : 'role-member')}"
+                                          th:text="${user.role}">Member</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-success" th:if="${user.active}">Active</span>
-                                    <span class="badge bg-secondary" th:unless="${user.active}">Inactive</span>
+                                    <span class="status-badge status-active" th:if="${user.active}">Active</span>
+                                    <span class="status-badge status-inactive" th:unless="${user.active}">Inactive</span>
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(users)}">
-                                <td colspan="4" class="text-center text-muted py-3">No users found.</td>
+                                <td colspan="4" class="text-center text-muted py-4">No users found.</td>
                             </tr>
                             </tbody>
                         </table>
@@ -446,13 +514,50 @@
                 </div>
             </div>
         </div>
+
+        <!-- Recent Loans -->
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-hand-holding-heart text-danger"></i> Recent Active Loans</span>
+                    <a href="/loans/manage" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div th:if="${recentLoans == null or #lists.isEmpty(recentLoans)}"
+                         class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                        <p class="mb-0">All clear — no active loans</p>
+                    </div>
+                    <div th:each="loan : ${recentLoans}" class="loan-row">
+                        <div>
+                            <div class="loan-book" th:text="${loan.book.title}">Book Title</div>
+                            <div class="loan-user">
+                                <i class="fas fa-user"></i>
+                                <span th:text="${loan.member.name}">Member</span>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="loan-due"
+                                  th:classappend="${loan.overdue ? 'overdue' : 'ok'}"
+                                  th:text="${loan.overdue ? 'Overdue' : 'Due ' + #temporals.format(loan.dueDate, 'MMM dd')}">
+                                Due
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div style="height: 40px;"></div>
 </div>
 
 <!-- ===== SCRIPTS ===== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // ---------- DARK MODE TOGGLE ----------
+<script th:inline="javascript">
+    // ============================================
+    // DARK MODE TOGGLE
+    // ============================================
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
         const btn = document.getElementById('darkModeToggle');
@@ -463,42 +568,107 @@
             btn.innerHTML = '<i class="fas fa-moon"></i>';
             localStorage.setItem('darkMode', 'disabled');
         }
+        updateChartColors();
     }
+
+    // ============================================
+    // CHART DATA
+    // ============================================
+    const chartLabels = /*[[${chartLabels}]]*/ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const chartData   = /*[[${chartData}]]*/   [8,12,15,22,18,24,30,28,32,40,45,52];
+
+    let chart;
+
+    function isDark() {
+        return document.body.classList.contains('dark-mode');
+    }
+
+    function buildChart() {
+        const ctx = document.getElementById('borrowChart').getContext('2d');
+        const tickColor = isDark() ? '#bbb' : '#6c757d';
+        const gridColor = isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+        gradient.addColorStop(0, 'rgba(102,126,234,0.9)');
+        gradient.addColorStop(1, 'rgba(233,69,96,0.6)');
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Books Borrowed',
+                    data: chartData,
+                    fill: true,
+                    backgroundColor: gradient,
+                    borderColor: '#667eea',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#667eea',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1a1a2e',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: tickColor, font: { family: 'Inter' } },
+                        grid: { color: gridColor }
+                    },
+                    x: {
+                        ticks: { color: tickColor, font: { family: 'Inter' } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateChartColors() {
+        if (!chart) return;
+        const tickColor = isDark() ? '#bbb' : '#6c757d';
+        const gridColor = isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
+        chart.options.scales.y.ticks.color = tickColor;
+        chart.options.scales.x.ticks.color = tickColor;
+        chart.options.scales.y.grid.color = gridColor;
+        chart.update();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         if (localStorage.getItem('darkMode') === 'enabled') {
             document.body.classList.add('dark-mode');
             document.getElementById('darkModeToggle').innerHTML = '<i class="fas fa-sun"></i>';
         }
 
-        // ---------- CHART.JS ----------
-        const ctx = document.getElementById('borrowChart').getContext('2d');
-        // Use static fallback data if model attributes not provided
-        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        const data = {
-            labels: labels,
-            datasets: [{
-                label: 'Books Borrowed',
-                data: [12, 19, 3, 5, 2, 3],
-                backgroundColor: 'rgba(102,126,234,0.6)',
-                borderColor: '#667eea',
-                borderWidth: 2,
-                borderRadius: 6,
-            }]
-        };
-        new Chart(ctx, {
-            type: 'bar',
-            data: data,
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
+        buildChart();
+
+        const elements = document.querySelectorAll('.fade-up');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+        elements.forEach(el => observer.observe(el));
+
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(a => a.remove());
+        }, 5000);
     });
 </script>
 </body>

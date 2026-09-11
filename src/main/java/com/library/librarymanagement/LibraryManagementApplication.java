@@ -10,7 +10,7 @@ public class LibraryManagementApplication {
         SpringApplication.run(LibraryManagementApplication.class, args);
         System.out.println("=========================================");
         System.out.println("🚀 Smart Library System Started!");
-        System.out.println("📚 Access at: http://localhost:8081");
+        System.out.println("📚 Access at: http://localhost:8080");
         System.out.println("=========================================");
     }
 }

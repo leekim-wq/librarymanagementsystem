@@ -20,24 +20,26 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @Query("SELECT b FROM Book b ORDER BY b.totalBorrows DESC")
     List<Book> findMostBorrowedBooks();
 
-    // ===== Sum queries for copy counts =====
     @Query("SELECT COALESCE(SUM(b.quantity), 0) FROM Book b")
     Long sumTotalCopies();
 
     @Query("SELECT COALESCE(SUM(b.availableQuantity), 0) FROM Book b")
     Long sumAvailableCopies();
 
-    // ===== NEW: Search across title, author, category, AND description =====
+    // ============================================================
+    // Multi-field search — title, author, category, description
+    // ============================================================
     @Query("""
         SELECT b FROM Book b
         WHERE LOWER(b.title)       LIKE LOWER(CONCAT('%', :q, '%'))
            OR LOWER(b.author)      LIKE LOWER(CONCAT('%', :q, '%'))
            OR LOWER(b.category)    LIKE LOWER(CONCAT('%', :q, '%'))
            OR LOWER(b.description) LIKE LOWER(CONCAT('%', :q, '%'))
+        ORDER BY b.rating DESC
     """)
     List<Book> searchAcrossAllFields(@Param("q") String query);
 
-    // ===== NEW: Same multi-field search but only available books =====
+    // Same search but only available books (for AI assistant)
     @Query("""
         SELECT b FROM Book b
         WHERE b.availableQuantity > 0
@@ -45,6 +47,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             OR LOWER(b.author)      LIKE LOWER(CONCAT('%', :q, '%'))
             OR LOWER(b.category)    LIKE LOWER(CONCAT('%', :q, '%'))
             OR LOWER(b.description) LIKE LOWER(CONCAT('%', :q, '%')))
+        ORDER BY b.rating DESC
     """)
     List<Book> searchAvailableAcrossAllFields(@Param("q") String query);
 }

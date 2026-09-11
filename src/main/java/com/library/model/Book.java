@@ -2,6 +2,8 @@ package com.library.model;
 
 import jakarta.persistence.*;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "books")
 public class Book {
@@ -29,6 +31,9 @@ public class Book {
 
     @Column(name = "total_borrows")
     private Integer totalBorrows = 0;
+
+    // ---------- Constructors ----------
+    public Book() {}
 
     // ---------- Getters and Setters ----------
     public Long getId() { return id; }
@@ -60,5 +65,29 @@ public class Book {
 
     public boolean isAvailable() {
         return availableQuantity != null && availableQuantity > 0;
+    }
+
+    // ---------- Safe equals / hashCode / toString ----------
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Book book)) return false;
+        return id != null && Objects.equals(id, book.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "Book{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", author='" + author + '\'' +
+                ", availableQuantity=" + availableQuantity +
+                ", quantity=" + quantity +
+                '}';
     }
 }

@@ -27,52 +27,67 @@ public class BookController {
     @Autowired
     private LoanService loanService;
 
-    // ---------- LIST BOOKS ----------
+    // ============================================================
+    // LIST BOOKS (with search + category)
+    // ============================================================
     @GetMapping
-    public String listBooks(@RequestParam(required = false) String query,
-                            @RequestParam(required = false) String category,
+    public String listBooks(@RequestParam(name = "search", required = false) String search,
+                            @RequestParam(name = "category", required = false) String category,
                             Authentication authentication,
                             Model model) {
+
         List<Book> books;
-        if (query != null && !query.trim().isEmpty()) {
-            books = bookService.searchBooks(query);
+
+        // Priority: search > category > all
+        if (search != null && !search.trim().isEmpty()) {
+            books = bookService.searchBooks(search.trim());
+            model.addAttribute("searchQuery", search.trim());
         } else if (category != null && !category.trim().isEmpty()) {
-            books = bookService.getBooksByCategory(category);
+            books = bookService.getBooksByCategory(category.trim());
+            model.addAttribute("selectedCategory", category.trim());
         } else {
             books = bookService.getAllBooks();
         }
 
         model.addAttribute("books", books);
         model.addAttribute("categories", bookService.getAllCategories());
-        model.addAttribute("selectedCategory", category);
-        model.addAttribute("query", query);
 
-        if (authentication != null && authentication.isAuthenticated()) {
-            Member member = (Member) authentication.getPrincipal();
-            model.addAttribute("member", member);
+        // Keep the search box populated
+        if (search != null && !search.trim().isEmpty()) {
+            model.addAttribute("searchQuery", search.trim());
         }
 
-        // ✅ CHANGE: return "books" instead of "book-list"
+        // Current member (if logged in)
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof Member) {
+            model.addAttribute("member", (Member) authentication.getPrincipal());
+        }
+
         return "books";
     }
 
-    // ---------- BOOK DETAIL ----------
+    // ============================================================
+    // BOOK DETAIL
+    // ============================================================
     @GetMapping("/{id}")
-    public String viewBook(@PathVariable Long id, Model model, Authentication authentication) {
+    public String viewBook(@PathVariable Long id,
+                           Authentication authentication,
+                           Model model) {
         Book book = bookService.getBookById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
         model.addAttribute("book", book);
 
-        if (authentication != null && authentication.isAuthenticated()) {
-            Member member = (Member) authentication.getPrincipal();
-            model.addAttribute("member", member);
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof Member) {
+            model.addAttribute("member", (Member) authentication.getPrincipal());
         }
 
-        // This already matches your "book-detail.html"
         return "book-detail";
     }
 
-    // ---------- BORROW ----------
+    // ============================================================
+    // BORROW
+    // ============================================================
     @PostMapping("/borrow/{bookId}")
     public String borrowBook(@PathVariable Long bookId,
                              Authentication authentication,
@@ -89,12 +104,15 @@ public class BookController {
         if (success) {
             redirectAttributes.addFlashAttribute("success", "Book borrowed successfully!");
         } else {
-            redirectAttributes.addFlashAttribute("error", "Failed to borrow book. It may be unavailable or you may have reached your limit.");
+            redirectAttributes.addFlashAttribute("error",
+                    "Failed to borrow book. It may be unavailable or you may have reached your limit.");
         }
         return "redirect:/books/" + bookId;
     }
 
-    // ---------- RETURN ----------
+    // ============================================================
+    // RETURN (staff only — enforced in SecurityConfig)
+    // ============================================================
     @PostMapping("/return/{loanId}")
     public String returnBook(@PathVariable Long loanId,
                              Authentication authentication,
