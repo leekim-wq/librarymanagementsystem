@@ -43,6 +43,12 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     List<Loan> findByDueDateBetweenAndReturnedFalse(LocalDate startDate, LocalDate endDate);
     List<Loan> findByReturnDateAfterAndReturnedTrue(LocalDate date);
 
+    /**
+     * ✅ NEW: Find active loans due on a specific date.
+     * Used by Firebase scheduler to send "due soon" reminders.
+     */
+    List<Loan> findByDueDateAndReturnedFalse(LocalDate dueDate);
+
     // ---------- Aggregates ----------
 
     @Query("SELECT COALESCE(SUM(l.fine), 0) FROM Loan l WHERE l.member = :member")
@@ -62,14 +68,9 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     List<Loan> findByMemberAndReturnedFalseWithBook(@Param("member") Member member);
 
     // ============================================================
-    // NEW: Staff-wide queries (Admin / Librarian)
+    // Staff-wide queries (Admin / Librarian)
     // ============================================================
 
-    /**
-     * All active (not-returned) loans across the entire library,
-     * with Book and Member eagerly loaded.
-     * Ordered by due date (soonest first).
-     */
     @Query("""
         SELECT l FROM Loan l
         JOIN FETCH l.book
@@ -79,9 +80,6 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     """)
     List<Loan> findAllActiveLoans();
 
-    /**
-     * All loans (active + returned) with Book and Member, for reporting.
-     */
     @Query("""
         SELECT l FROM Loan l
         JOIN FETCH l.book

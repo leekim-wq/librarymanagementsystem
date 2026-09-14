@@ -86,7 +86,7 @@
         </dependency>
 
         <!-- ============================================ -->
-        <!-- FIREBASE (Push Notifications for Mobile)      -->
+        <!-- FIREBASE CLOUD MESSAGING (Push Notifications) -->
         <!-- ============================================ -->
         <dependency>
             <groupId>com.google.firebase</groupId>

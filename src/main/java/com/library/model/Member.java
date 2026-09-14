@@ -50,7 +50,6 @@ public class Member implements UserDetails {
      *  - @ToString.Exclude prevents LazyInitializationException when Spring
      *    Security logs the authenticated user outside a transaction.
      *  - @EqualsAndHashCode.Exclude prevents the same problem in equals()/hashCode().
-     *  - @JsonIgnore isn't needed (no REST serialization of this entity yet).
      */
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -67,6 +66,14 @@ public class Member implements UserDetails {
 
     @Column(name = "role")
     private String role = "MEMBER";
+
+    // ============================================================
+    // Firebase Cloud Messaging (FCM) — device token
+    // Stores the mobile device's FCM registration token so we can
+    // send push notifications (due dates, overdue alerts, etc.)
+    // ============================================================
+    @Column(name = "fcm_token", length = 512)
+    private String fcmToken;
 
     // ============================================================
     // UserDetails implementation
@@ -127,6 +134,7 @@ public class Member implements UserDetails {
                 ", name='" + name + '\'' +
                 ", role='" + role + '\'' +
                 ", active=" + active +
+                ", hasFcmToken=" + (fcmToken != null && !fcmToken.isBlank()) +
                 '}';
     }
 }

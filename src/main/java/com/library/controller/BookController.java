@@ -18,14 +18,9 @@ import java.util.List;
 @RequestMapping("/books")
 public class BookController {
 
-    @Autowired
-    private BookService bookService;
-
-    @Autowired
-    private MemberService memberService;
-
-    @Autowired
-    private LoanService loanService;
+    @Autowired private BookService bookService;
+    @Autowired private MemberService memberService;
+    @Autowired private LoanService loanService;
 
     // ============================================================
     // LIST BOOKS (with search + category)
@@ -38,7 +33,6 @@ public class BookController {
 
         List<Book> books;
 
-        // Priority: search > category > all
         if (search != null && !search.trim().isEmpty()) {
             books = bookService.searchBooks(search.trim());
             model.addAttribute("searchQuery", search.trim());
@@ -52,12 +46,6 @@ public class BookController {
         model.addAttribute("books", books);
         model.addAttribute("categories", bookService.getAllCategories());
 
-        // Keep the search box populated
-        if (search != null && !search.trim().isEmpty()) {
-            model.addAttribute("searchQuery", search.trim());
-        }
-
-        // Current member (if logged in)
         if (authentication != null && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof Member) {
             model.addAttribute("member", (Member) authentication.getPrincipal());
@@ -75,6 +63,7 @@ public class BookController {
                            Model model) {
         Book book = bookService.getBookById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
+
         model.addAttribute("book", book);
 
         if (authentication != null && authentication.isAuthenticated()

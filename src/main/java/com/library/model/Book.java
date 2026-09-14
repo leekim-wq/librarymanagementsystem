@@ -32,6 +32,16 @@ public class Book {
     @Column(name = "total_borrows")
     private Integer totalBorrows = 0;
 
+    // ============================================================
+    // SOFT DELETE FLAG
+    // ------------------------------------------------------------
+    // columnDefinition = "BOOLEAN DEFAULT TRUE" ensures MySQL fills
+    // existing rows with TRUE when Hibernate adds this column.
+    // Without this, `nullable = false` would fail on existing data.
+    // ============================================================
+    @Column(name = "active", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean active = true;
+
     // ---------- Constructors ----------
     public Book() {}
 
@@ -63,6 +73,9 @@ public class Book {
     public Integer getTotalBorrows() { return totalBorrows; }
     public void setTotalBorrows(Integer totalBorrows) { this.totalBorrows = totalBorrows; }
 
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+
     public boolean isAvailable() {
         return availableQuantity != null && availableQuantity > 0;
     }
@@ -88,6 +101,7 @@ public class Book {
                 ", author='" + author + '\'' +
                 ", availableQuantity=" + availableQuantity +
                 ", quantity=" + quantity +
+                ", active=" + active +
                 '}';
     }
 }

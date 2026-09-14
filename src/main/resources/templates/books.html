@@ -4,12 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="application-name" content="Smart Library">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Smart Library">
+    <link rel="apple-touch-icon" href="/images/icon-192.png">
+    <link rel="icon" type="image/png" href="/images/icon-192.png">
+    <link rel="shortcut icon" href="/images/icon-192.png">
+
     <title>Books – Smart Library</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* ---------- RESET & BASE ---------- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
@@ -17,10 +29,7 @@
             min-height: 100vh;
             transition: background 0.3s, color 0.3s;
         }
-        body.dark-mode {
-            background: #121212;
-            color: #e0e0e0;
-        }
+        body.dark-mode { background: #121212; color: #e0e0e0; }
         body.dark-mode .navbar-custom { background: #1e1e2f; border-bottom-color: #bb86fc; }
         body.dark-mode .page-header { background: #1e1e2f; }
         body.dark-mode .book-card { background: #1e1e2f; color: #e0e0e0; }
@@ -35,29 +44,18 @@
         body.dark-mode .btn-outline-secondary:hover { background: #333; color: #fff; }
         body.dark-mode .empty-state { color: #ccc; }
 
-        /* ---------- SCROLL ANIMATIONS ---------- */
-        .fade-up {
-            opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
+        .fade-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
         .fade-up.visible { opacity: 1; transform: translateY(0); }
 
-        /* ---------- NAVBAR ---------- */
         .navbar-custom {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             padding: 12px 0;
             box-shadow: 0 4px 30px rgba(0,0,0,0.3);
             border-bottom: 3px solid #e94560;
-            position: sticky;
-            top: 0;
-            z-index: 1050;
+            position: sticky; top: 0; z-index: 1050;
             transition: background 0.3s;
         }
-        .navbar-custom .navbar-brand {
-            font-weight: 900; font-size: 1.6rem;
-            color: #fff !important; letter-spacing: -0.5px;
-        }
+        .navbar-custom .navbar-brand { font-weight: 900; font-size: 1.6rem; color: #fff !important; letter-spacing: -0.5px; }
         .navbar-custom .navbar-brand i { color: #e94560; margin-right: 10px; }
         .navbar-custom .nav-link {
             color: rgba(255,255,255,0.85) !important;
@@ -65,9 +63,7 @@
             padding: 8px 18px; border-radius: 25px; position: relative;
         }
         .navbar-custom .nav-link:hover {
-            color: #fff !important;
-            background: rgba(233, 69, 96, 0.2);
-            transform: translateY(-2px);
+            color: #fff !important; background: rgba(233, 69, 96, 0.2); transform: translateY(-2px);
         }
         .navbar-custom .nav-link.active { color: #fff !important; background: #e94560; }
         .navbar-custom .dropdown-menu {
@@ -99,21 +95,16 @@
         }
         .dark-toggle:hover { background: rgba(255,255,255,0.2); }
 
-        /* ---------- PAGE HEADER ---------- */
         .page-header {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             color: white; padding: 50px 0 40px;
             margin-bottom: 30px; border-radius: 0 0 40px 40px;
             position: relative; overflow: hidden;
         }
-        .page-header .floating-shapes {
-            position: absolute; width: 100%; height: 100%;
-            top: 0; left: 0; pointer-events: none;
-        }
+        .page-header .floating-shapes { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; }
         .page-header .floating-shapes span {
             position: absolute; border-radius: 50%;
-            background: rgba(233,69,96,0.06);
-            animation: float 20s infinite ease-in-out;
+            background: rgba(233,69,96,0.06); animation: float 20s infinite ease-in-out;
         }
         .page-header .floating-shapes span:nth-child(1) { width: 250px; height: 250px; top: -60px; left: -60px; }
         .page-header .floating-shapes span:nth-child(2) { width: 300px; height: 300px; bottom: -100px; right: -80px; animation-delay: -6s; background: rgba(102,126,234,0.06); }
@@ -124,34 +115,22 @@
             66% { transform: translate(-15px,20px) scale(0.95); }
             100% { transform: translate(0,0) scale(1); }
         }
-        .page-header h2 {
-            font-weight: 900; font-size: 2.5rem;
-            letter-spacing: -1px; position: relative; z-index: 1;
-        }
+        .page-header h2 { font-weight: 900; font-size: 2.5rem; letter-spacing: -1px; position: relative; z-index: 1; }
         .page-header p { font-size: 1.1rem; opacity: 0.8; position: relative; z-index: 1; }
 
-        /* ---------- SEARCH & FILTERS ---------- */
         .search-box {
             border-radius: 50px; padding: 14px 24px;
             border: 2px solid #e0e0e0; transition: all 0.3s;
             font-size: 0.95rem; background: rgba(255,255,255,0.8);
             backdrop-filter: blur(5px);
         }
-        .search-box:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
-            background: #fff;
-        }
+        .search-box:focus { border-color: #667eea; box-shadow: 0 0 0 4px rgba(102,126,234,0.15); background: #fff; }
         .btn-gradient {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none; color: #fff; padding: 10px 28px;
             border-radius: 50px; font-weight: 600; transition: all 0.3s;
         }
-        .btn-gradient:hover {
-            transform: scale(1.03);
-            box-shadow: 0 10px 25px rgba(102,126,234,0.4);
-            color: #fff;
-        }
+        .btn-gradient:hover { transform: scale(1.03); box-shadow: 0 10px 25px rgba(102,126,234,0.4); color: #fff; }
         .category-pill {
             padding: 8px 22px; border-radius: 25px;
             background: rgba(255,255,255,0.7); backdrop-filter: blur(5px);
@@ -164,12 +143,8 @@
             transform: translateY(-3px) scale(1.03);
             box-shadow: 0 8px 20px rgba(102,126,234,0.2);
         }
-        .category-pill.active {
-            background: #667eea; color: #fff;
-            box-shadow: 0 8px 20px rgba(102,126,234,0.3);
-        }
+        .category-pill.active { background: #667eea; color: #fff; box-shadow: 0 8px 20px rgba(102,126,234,0.3); }
 
-        /* ---------- BOOK CARDS ---------- */
         .book-card {
             border: none; border-radius: 20px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -179,10 +154,7 @@
             height: 100%; overflow: hidden;
             border: 1px solid rgba(255,255,255,0.2);
         }
-        .book-card:hover {
-            transform: translateY(-12px) scale(1.02);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-        }
+        .book-card:hover { transform: translateY(-12px) scale(1.02); box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
         .book-card .card-body { padding: 20px; }
         .book-title {
             font-weight: 700; font-size: 1.05rem; color: #1a1a2e;
@@ -191,36 +163,21 @@
             -webkit-box-orient: vertical; overflow: hidden; height: 2.8rem;
         }
         .book-author { color: #6c757d; font-size: 0.9rem; margin-bottom: 8px; }
-        .book-meta {
-            display: flex; justify-content: space-between;
-            align-items: center; margin-top: 8px;
-        }
+        .book-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
         .badge-category {
             background: rgba(0,0,0,0.05); color: #495057;
             padding: 4px 12px; border-radius: 20px;
             font-size: 0.7rem; font-weight: 600;
         }
-        .badge-available {
-            background: #27ae60; color: #fff;
-            padding: 4px 12px; border-radius: 20px;
-            font-size: 0.7rem; font-weight: 600;
-        }
-        .badge-borrowed {
-            background: #e94560; color: #fff;
-            padding: 4px 12px; border-radius: 20px;
-            font-size: 0.7rem; font-weight: 600;
-        }
+        .badge-available { background: #27ae60; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .badge-borrowed { background: #e94560; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
         .btn-cart {
             background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             border: none; color: #fff; padding: 6px 16px;
             border-radius: 25px; font-weight: 600;
             font-size: 0.85rem; transition: all 0.3s; width: 100%;
         }
-        .btn-cart:hover:not(:disabled) {
-            transform: scale(1.04);
-            box-shadow: 0 8px 20px rgba(39,174,96,0.3);
-            color: #fff;
-        }
+        .btn-cart:hover:not(:disabled) { transform: scale(1.04); box-shadow: 0 8px 20px rgba(39,174,96,0.3); color: #fff; }
         .btn-cart:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-outline-primary-custom {
             border: 2px solid #667eea; color: #667eea;
@@ -230,27 +187,8 @@
         }
         .btn-outline-primary-custom:hover { background: #667eea; color: #fff; }
 
-        /* ---------- EMPTY STATE ---------- */
         .empty-state i { font-size: 4rem; color: #6c757d; }
 
-        /* ---------- DARK MODE OVERRIDES ---------- */
-        body.dark-mode .book-card {
-            background: rgba(30,30,47,0.85);
-            border-color: rgba(255,255,255,0.05);
-        }
-        body.dark-mode .book-title { color: #fff; }
-        body.dark-mode .book-author { color: #aaa; }
-        body.dark-mode .badge-category { background: #2d2d44; color: #ccc; }
-        body.dark-mode .category-pill { background: #2d2d44; color: #ccc; border-color: #444; }
-        body.dark-mode .category-pill.active { background: #667eea; color: #fff; border-color: #667eea; }
-        body.dark-mode .search-box { background: #1e1e2f; border-color: #444; color: #fff; }
-        body.dark-mode .search-box::placeholder { color: #888; }
-        body.dark-mode .btn-outline-secondary { color: #aaa; border-color: #555; }
-        body.dark-mode .btn-outline-secondary:hover { background: #333; color: #fff; }
-        body.dark-mode .empty-state { color: #ccc; }
-        body.dark-mode .empty-state i { color: #888; }
-
-        /* ---------- RESPONSIVE ---------- */
         @media (max-width: 992px) { .page-header h2 { font-size: 2rem; } }
         @media (max-width: 768px) {
             .navbar-custom .navbar-brand { font-size: 1.2rem; }
@@ -275,7 +213,6 @@
                 <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a></li>
                 <li class="nav-item"><a class="nav-link active" href="/books"><i class="fas fa-book"></i> Books</a></li>
 
-                <!-- Cart — Members only -->
                 <li class="nav-item" sec:authorize="hasRole('MEMBER')">
                     <a class="nav-link" href="/cart">
                         <i class="fas fa-shopping-cart"></i> Cart
@@ -283,19 +220,14 @@
                     </a>
                 </li>
 
-                <!-- My Loans — Members only -->
                 <li class="nav-item" sec:authorize="hasRole('MEMBER')">
                     <a class="nav-link" href="/loans"><i class="fas fa-hand-holding-heart"></i> My Loans</a>
                 </li>
 
-                <!-- Manage Loans — Staff only -->
                 <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'LIBRARIAN')">
-                    <a class="nav-link" href="/loans/manage">
-                        <i class="fas fa-tasks"></i> Manage Loans
-                    </a>
+                    <a class="nav-link" href="/loans/manage"><i class="fas fa-tasks"></i> Manage Loans</a>
                 </li>
 
-                <!-- Admin Dropdown -->
                 <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-user-shield"></i> Admin
@@ -308,7 +240,6 @@
                     </ul>
                 </li>
 
-                <!-- Librarian Dropdown -->
                 <li class="nav-item dropdown" sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-book-open"></i> Manage
@@ -321,21 +252,18 @@
                     </ul>
                 </li>
 
-                <!-- User badge -->
                 <li class="nav-item" sec:authorize="isAuthenticated()">
                     <span class="user-badge">
                         <i class="fas fa-user-circle"></i> <span sec:authentication="name">User</span>
                     </span>
                 </li>
 
-                <!-- Dark mode toggle -->
                 <li class="nav-item">
                     <button class="dark-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
                         <i class="fas fa-moon"></i>
                     </button>
                 </li>
 
-                <!-- Auth -->
                 <li class="nav-item" sec:authorize="!isAuthenticated()">
                     <a class="nav-link" href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
                 </li>
@@ -366,7 +294,6 @@
 <!-- ===== MAIN CONTENT ===== -->
 <div class="container">
 
-    <!-- Search & Filter -->
     <div class="row g-3 mb-4">
         <div class="col-md-8 mx-auto">
             <form action="/books" method="get" class="d-flex">
@@ -383,7 +310,6 @@
         </div>
     </div>
 
-    <!-- Search result banner -->
     <div th:if="${searchQuery != null and !searchQuery.isEmpty()}" class="alert alert-info d-flex align-items-center">
         <i class="fas fa-search me-2"></i>
         <div>
@@ -395,7 +321,6 @@
         </div>
     </div>
 
-    <!-- Category pills -->
     <div class="mb-4 fade-up">
         <a href="/books" class="category-pill" th:classappend="${selectedCategory == null ? 'active' : ''}">
             <i class="fas fa-th-list"></i> All
@@ -407,7 +332,6 @@
            th:text="${cat}">Category</a>
     </div>
 
-    <!-- Alert messages -->
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
         <i class="fas fa-check-circle"></i> <span th:text="${success}">Success</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -417,7 +341,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <!-- Books Grid -->
     <div class="row" th:if="${not #lists.isEmpty(books)}">
         <div th:each="book : ${books}" class="col-lg-3 col-md-4 col-sm-6 mb-4 fade-up">
             <div class="book-card">
@@ -439,7 +362,6 @@
                         <a th:href="'/books/' + ${book.id}" class="btn btn-outline-primary-custom">
                             <i class="fas fa-eye"></i> Details
                         </a>
-                        <!-- Add to Cart for authenticated members -->
                         <div sec:authorize="hasRole('MEMBER')">
                             <form th:action="'/cart/add/' + ${book.id}" method="post">
                                 <button type="submit" class="btn btn-cart"
@@ -450,13 +372,11 @@
                                 </button>
                             </form>
                         </div>
-                        <!-- Prompt for guests -->
                         <div sec:authorize="!isAuthenticated()">
                             <a href="/login" class="btn btn-outline-secondary w-100">
                                 <i class="fas fa-sign-in-alt"></i> Login to Borrow
                             </a>
                         </div>
-                        <!-- Edit/Delete for Librarian/Admin -->
                         <div sec:authorize="hasAnyRole('LIBRARIAN', 'ADMIN')">
                             <div class="btn-group w-100">
                                 <a th:href="'/books/edit/' + ${book.id}" class="btn btn-warning btn-sm">
@@ -476,7 +396,6 @@
         </div>
     </div>
 
-    <!-- Empty state -->
     <div th:if="${#lists.isEmpty(books)}" class="empty-state text-center py-5 fade-up">
         <i class="fas fa-book-open"></i>
         <h4 class="mt-3">
@@ -526,6 +445,15 @@
             document.querySelectorAll('.alert').forEach(a => a.remove());
         }, 5000);
     });
+
+    // PWA Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('✅ Service Worker registered:', reg.scope))
+                .catch(err => console.error('❌ Service Worker registration failed:', err));
+        });
+    }
 </script>
 </body>
 </html>
