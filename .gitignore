@@ -116,4 +116,5 @@ jacoco.exec
 # ============================================
 *.swp
 *.swo
-*~
+*~.env
+src/main/resources/firebase-service-account.json

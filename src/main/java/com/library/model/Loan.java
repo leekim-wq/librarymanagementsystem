@@ -57,9 +57,19 @@ public class Loan {
     private Long daysLeft;
 
     // ============================================================
+    // Fine rate — 500 KES per overdue day
+    // ============================================================
+    public static final double FINE_RATE_PER_DAY_KES = 500.0;
+
+    // ============================================================
     // Derived methods
     // ============================================================
 
+    /**
+     * Calculate fine in Kenyan Shillings (KES).
+     * - 500 KES per day after the due date.
+     * - If already returned, returns frozen `fine`.
+     */
     public double calculateFine() {
         if (returned || returnDate != null) {
             return fine;
@@ -67,7 +77,7 @@ public class Loan {
         LocalDate today = LocalDate.now();
         if (today.isAfter(dueDate)) {
             long daysOverdue = ChronoUnit.DAYS.between(dueDate, today);
-            return daysOverdue * 0.50; // $0.50 per day
+            return daysOverdue * FINE_RATE_PER_DAY_KES;
         }
         return 0.0;
     }

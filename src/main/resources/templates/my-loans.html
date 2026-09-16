@@ -76,7 +76,7 @@
             font-size: 5rem; opacity: 0.12; transition: 0.4s;
         }
         .stat-card:hover i.stat-icon { transform: scale(1.15) rotate(-5deg); opacity: 0.18; }
-        .stat-card h3 { font-weight: 900; font-size: 2.6rem; margin-bottom: 4px; letter-spacing: -1px; }
+        .stat-card h3 { font-weight: 900; font-size: 2.4rem; margin-bottom: 4px; letter-spacing: -1px; }
         .stat-card small { font-weight: 700; opacity: 0.95; letter-spacing: 0.8px; text-transform: uppercase; font-size: 0.72rem; }
 
         .stat-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
@@ -155,6 +155,20 @@
         }
         .btn-info-soft:hover { background: #667eea; color: #fff; border-style: solid; transform: translateY(-2px); }
 
+        /* M-Pesa Button */
+        .btn-mpesa {
+            background: linear-gradient(135deg, #00A651, #007A3D);
+            color: #fff; border: none; padding: 10px 24px;
+            border-radius: 25px; font-weight: 700; font-size: 0.9rem;
+            transition: all 0.3s; box-shadow: 0 4px 14px rgba(0,166,81,0.3);
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-mpesa:hover {
+            color: #fff; transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 22px rgba(0,166,81,0.5);
+        }
+        .btn-mpesa:disabled { opacity: 0.6; cursor: not-allowed; }
+
         .history-card {
             background: #fff; border-radius: 16px; padding: 18px 22px;
             border-left: 4px solid #95a5a6; transition: all 0.3s;
@@ -225,6 +239,52 @@
             color: #fff; transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(102,126,234,0.4);
         }
+
+        /* M-Pesa Modal */
+        .mpesa-modal .modal-header {
+            background: linear-gradient(135deg, #00A651, #007A3D);
+            color: #fff; border: none; padding: 22px 26px;
+            border-radius: 24px 24px 0 0;
+        }
+        .mpesa-modal .modal-content {
+            border-radius: 24px; border: none; overflow: hidden;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+        }
+        .mpesa-modal .modal-body { padding: 32px 28px; }
+        .mpesa-modal .form-control {
+            border-radius: 12px; padding: 14px 18px;
+            border: 2px solid #e9ecef; font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .mpesa-modal .form-control:focus {
+            border-color: #00A651;
+            box-shadow: 0 0 0 4px rgba(0,166,81,0.15);
+        }
+        .mpesa-modal .btn-pay {
+            background: linear-gradient(135deg, #00A651, #007A3D);
+            color: #fff; border: none; padding: 14px;
+            border-radius: 50px; font-weight: 700; font-size: 1rem;
+            width: 100%; transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(0,166,81,0.35);
+        }
+        .mpesa-modal .btn-pay:hover {
+            color: #fff; transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,166,81,0.5);
+        }
+        .mpesa-logo {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: #f0fff4; padding: 12px 20px;
+            border-radius: 12px; margin-bottom: 20px;
+            border-left: 4px solid #00A651;
+        }
+        .mpesa-logo .text { font-weight: 700; color: #00A651; }
+        .amount-display {
+            background: linear-gradient(135deg, #00A651, #007A3D);
+            color: #fff; padding: 20px; border-radius: 16px;
+            text-align: center; margin-bottom: 24px;
+        }
+        .amount-display .label { font-size: 0.85rem; opacity: 0.9; margin-bottom: 6px; }
+        .amount-display .value { font-size: 2rem; font-weight: 900; letter-spacing: -1px; }
 
         .fade-in-up { animation: fadeInUp 0.6s ease both; }
         @keyframes fadeInUp {
@@ -319,6 +379,30 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
+    <!-- ============================================ -->
+    <!-- PENDING FINES BANNER + M-PESA BUTTON          -->
+    <!-- ============================================ -->
+    <div th:if="${totalFines > 0}" class="alert alert-warning border-0 shadow-sm rounded-3 mb-4 fade-in-up">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h5 class="mb-1 fw-bold">
+                    <i class="fas fa-exclamation-circle text-danger"></i>
+                    Pending Fine: KES <span th:text="${#numbers.formatDecimal(totalFines, 1, 2)}">0.00</span>
+                </h5>
+                <small class="text-muted">
+                    Fine rate: <strong>KES 500 per day</strong> after the due date
+                </small>
+            </div>
+            <button class="btn btn-mpesa"
+                    data-bs-toggle="modal"
+                    data-bs-target="#mpesaPaymentModal"
+                    th:attr="data-fine=${totalFines}, data-member-id=${member != null ? member.id : 0}">
+                <i class="fas fa-mobile-alt"></i> Pay with M-Pesa
+            </button>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
     <div class="row g-3 mb-4">
         <div class="col-md-3 col-sm-6 fade-in-up stagger-1">
             <div class="stat-card stat-primary">
@@ -343,8 +427,8 @@
         </div>
         <div class="col-md-3 col-sm-6 fade-in-up stagger-4">
             <div class="stat-card stat-danger">
-                <i class="fas fa-dollar-sign stat-icon"></i>
-                <h3 th:text="'$' + ${#numbers.formatDecimal(totalFines, 1, 2)}">$0.00</h3>
+                <i class="fas fa-money-bill-wave stat-icon"></i>
+                <h3 th:text="'KES ' + ${#numbers.formatDecimal(totalFines, 1, 0)}">KES 0</h3>
                 <small>Pending Fines</small>
             </div>
         </div>
@@ -442,7 +526,7 @@
                             <div th:if="${loan.overdue}" class="mb-3">
                                 <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill">
                                     <i class="fas fa-exclamation-circle"></i>
-                                    Fine: $<span th:text="${#numbers.formatDecimal(loan.calculateFine(), 1, 2)}">0.00</span>
+                                    Fine: KES <span th:text="${#numbers.formatDecimal(loan.calculateFine(), 1, 0)}">0</span>
                                 </span>
                             </div>
                             <div class="d-flex gap-2 justify-content-md-end flex-wrap">
@@ -493,8 +577,8 @@
                             <i class="fas fa-check"></i> Returned
                         </span>
                         <span th:if="${loan.fine > 0}" class="badge-status badge-overdue ms-1">
-                            <i class="fas fa-dollar-sign"></i>
-                            <span th:text="${#numbers.formatDecimal(loan.fine, 1, 2)}">0</span>
+                            <i class="fas fa-money-bill-wave"></i>
+                            KES <span th:text="${#numbers.formatDecimal(loan.fine, 1, 0)}">0</span>
                         </span>
                     </div>
                     <div class="text-end small text-muted">
@@ -523,11 +607,16 @@
             <i class="fas fa-database"></i> MySQL
             &nbsp;|&nbsp;
             <i class="fas fa-brain"></i> AI Powered
+            &nbsp;|&nbsp;
+            <i class="fas fa-mobile-alt"></i> M-Pesa
         </p>
         <small class="d-block mt-2">© 2026 Smart Library System — All rights reserved</small>
     </div>
 </footer>
 
+<!-- ============================================ -->
+<!-- RETURN INFO MODAL (for MEMBERS)               -->
+<!-- ============================================ -->
 <div class="modal fade info-modal" id="returnInfoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -562,8 +651,70 @@
     </div>
 </div>
 
+<!-- ============================================ -->
+<!-- M-PESA PAYMENT MODAL (for MEMBERS)           -->
+<!-- ============================================ -->
+<div class="modal fade mpesa-modal" id="mpesaPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-mobile-alt"></i> Pay Fine with M-Pesa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="mpesa-logo">
+                    <i class="fas fa-mobile-alt fa-2x text-success"></i>
+                    <div>
+                        <div class="text">M-PESA</div>
+                        <small class="text-muted">Safaricom Daraja API (Sandbox)</small>
+                    </div>
+                </div>
+
+                <div class="amount-display">
+                    <div class="label">Amount to Pay</div>
+                    <div class="value">
+                        KES <span id="mpesaAmount">0</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-phone text-success"></i> M-Pesa Phone Number
+                    </label>
+                    <input type="tel"
+                           id="mpesaPhone"
+                           class="form-control"
+                           placeholder="e.g., 0712345678 or 254712345678"
+                           required>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle"></i>
+                        Enter the phone number registered with M-Pesa.
+                    </small>
+                </div>
+
+                <div id="mpesaMessage" class="alert d-none" role="alert"></div>
+
+                <button type="button" class="btn btn-pay" id="mpesaPayBtn" onclick="submitMpesaPayment()">
+                    <i class="fas fa-paper-plane"></i> Send STK Push
+                </button>
+
+                <small class="d-block text-center text-muted mt-3">
+                    <i class="fas fa-lock"></i> A PIN prompt will appear on your phone
+                </small>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // ============================================
+    // RETURN INFO MODAL
+    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('returnInfoModal');
         if (modal) {
@@ -578,7 +729,102 @@
         }
     });
 
-    // PWA Service Worker
+    // ============================================
+    // M-PESA PAYMENT
+    // ============================================
+    let currentFine = 0;
+    let currentMemberId = 0;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const mpesaModal = document.getElementById('mpesaPaymentModal');
+        if (mpesaModal) {
+            mpesaModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                currentFine = parseFloat(button.getAttribute('data-fine')) || 0;
+                currentMemberId = parseInt(button.getAttribute('data-member-id')) || 0;
+
+                // Update modal display
+                document.getElementById('mpesaAmount').textContent =
+                    currentFine.toFixed(2);
+
+                // Reset state
+                document.getElementById('mpesaPhone').value = '';
+                document.getElementById('mpesaMessage').classList.add('d-none');
+                document.getElementById('mpesaPayBtn').disabled = false;
+                document.getElementById('mpesaPayBtn').innerHTML =
+                    '<i class="fas fa-paper-plane"></i> Send STK Push';
+            });
+        }
+    });
+
+    async function submitMpesaPayment() {
+        const phone = document.getElementById('mpesaPhone').value.trim();
+        const messageDiv = document.getElementById('mpesaMessage');
+        const payBtn = document.getElementById('mpesaPayBtn');
+
+        // Validation
+        if (!phone) {
+            showMpesaMessage('Please enter your M-Pesa phone number', 'danger');
+            return;
+        }
+
+        if (currentFine <= 0) {
+            showMpesaMessage('No pending fine to pay', 'warning');
+            return;
+        }
+
+        // Disable button and show loading
+        payBtn.disabled = true;
+        payBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        messageDiv.classList.add('d-none');
+
+        try {
+            const response = await fetch('/api/mpesa/pay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phoneNumber: phone,
+                    amount: currentFine,
+                    memberId: currentMemberId
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMpesaMessage(
+                    '✅ ' + (result.message || 'STK Push sent') +
+                    '<br><br><strong>Check your phone for the M-Pesa PIN prompt.</strong>' +
+                    '<br><small class="text-muted">Reference: ' + (result.checkoutRequestId || '—') + '</small>',
+                    'success'
+                );
+                payBtn.innerHTML = '<i class="fas fa-check"></i> Prompt Sent';
+            } else {
+                showMpesaMessage(
+                    '❌ ' + (result.message || 'Payment failed') +
+                    (result.raw ? '<br><small>' + result.raw + '</small>' : ''),
+                    'danger'
+                );
+                payBtn.disabled = false;
+                payBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Try Again';
+            }
+        } catch (error) {
+            showMpesaMessage('❌ Network error: ' + error.message, 'danger');
+            payBtn.disabled = false;
+            payBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Try Again';
+        }
+    }
+
+    function showMpesaMessage(html, type) {
+        const messageDiv = document.getElementById('mpesaMessage');
+        messageDiv.className = 'alert alert-' + type;
+        messageDiv.innerHTML = html;
+        messageDiv.classList.remove('d-none');
+    }
+
+    // ============================================
+    // PWA SERVICE WORKER
+    // ============================================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js')

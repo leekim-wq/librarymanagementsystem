@@ -29,15 +29,34 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      # Database
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/lib_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: library_user
       SPRING_DATASOURCE_PASSWORD: library123
-      SERVER_PORT: 8080
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "false"
       SPRING_THYMELEAF_CACHE: "true"
+
+      # Server
+      SERVER_PORT: 8080
+
+      # DataLoader
       DATALOADER_ENABLED: "true"
-      AI_API_KEY: your_actual_gemini_api_key_here
+
+      # AI
+      AI_API_KEY: ${AI_API_KEY}
+
+      # Firebase
+      FIREBASE_ENABLED: "true"
+
+      # M-Pesa
+      MPESA_ENABLED: "true"
+      MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
+      MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
+      MPESA_SHORTCODE: "174379"
+      MPESA_PASSKEY: "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+      MPESA_CALLBACK_URL: ${MPESA_CALLBACK_URL}
+      MPESA_ENV: "sandbox"
     ports:
       - "8080:8080"
     networks:

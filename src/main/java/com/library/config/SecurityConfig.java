@@ -17,7 +17,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)   // <-- enable method-level security
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Autowired
@@ -35,6 +35,9 @@ public class SecurityConfig {
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                         .requestMatchers("/register", "/login", "/logout", "/perform_login").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+
+                        // ---------- M-PESA (public for STK push + callbacks) ----------
+                        .requestMatchers("/api/mpesa/**").permitAll()
 
                         // ---------- AI Assistant — authenticated users ----------
                         .requestMatchers("/api/ai/**").authenticated()
